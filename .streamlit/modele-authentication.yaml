@@ -1,0 +1,14 @@
+#See https://github.com/mkhorasani/Streamlit-Authenticator
+credentials:
+  usernames:
+    admin:
+      email: email@syndicat-reyssouze.fr
+      name: Administrateur
+      password: $2b$12$a1pgdZ5asLTovPGb/vnbvOzfB1Wz0AU9e3ci2WofVeij45qQEq3Uu # Placeholder for hashed password for 'ok'
+cookie:
+  expiry_days: 30
+  key: SBVRSignatureKey # Must be string
+  name: sbvr_observatoire_myliaq
+preauthorized:
+  emails:
+#  - melsby@gmail.com

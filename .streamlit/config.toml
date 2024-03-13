@@ -1,0 +1,16 @@
+#https://docs.streamlit.io/library/advanced-features/configuration
+
+[theme] # You have to add this line
+base="dark"
+primaryColor="#F63366"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F0F2F6"
+textColor="#262730"
+font="sans serif"
+
+[server]
+enableStaticServing = true
+headless = true
+
+[client]
+showErrorDetails = false
