@@ -134,7 +134,7 @@ def dashboard():
                         #st.warning(pre_last_record)
                         #st.warning(last_record)
                         #st.markdown(f"[:green[{station_name}]](/station/{station})")
-                        st.markdown(f'<a href="/station?station_id={station_id}" target="_self"><h3>:green[{station_name}]</h3></a>', unsafe_allow_html=True)
+                        st.markdown(f'<a href="https://reyssouze.myliaq.fr/#/station/hydrometry/{station_id}/dashboard" target="_blank"><h3>:green[{station_name}]</h3></a>', unsafe_allow_html=True)
                         
                         #MAJ indicator
                         date_diff = datetime.now(timezone.utc)- (last_record.timestamp.item())
