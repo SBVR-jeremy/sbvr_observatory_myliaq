@@ -3,6 +3,8 @@
 Visualization application for SBVR data, called 'SBVR Observatoire'
 Based on streamlit.
 
+![Alt text](./static/images/dashboard.png?raw=true "Dashboard Screenshot")
+
 ## Installation
 
 Create and activate a virtual environment, then install required packages :
