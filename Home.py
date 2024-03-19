@@ -17,6 +17,7 @@ __status__ = "Dev"
 
 import streamlit as st
 import streamlit_authenticator as stauth
+from streamlit_autorefresh import st_autorefresh
 
 import folium
 from streamlit_folium import st_folium, folium_static
@@ -226,6 +227,7 @@ def dashboard():
 # Main page*
 # ---------------------------------------------------------------------------------------------
 
+
 faviconPath = "static/images/cropped-favicon-32x32.jpg"
 
 st.set_page_config(layout="wide", page_icon=faviconPath, page_title="SBVR Observatoire MYLIAQ", initial_sidebar_state='collapsed')
@@ -240,9 +242,15 @@ st.set_page_config(layout="wide", page_icon=faviconPath, page_title="SBVR Observ
 ## Adding Image to web app
 #st.set_ page_config(page_title="Surge Price Prediction App", page_icon = im)
 
+
 hide_rainbow_bar()
 hide_streamlit_credits()
 
 st.title('SBVR Observatoire MYLIAQ')
+st.text('MAJ : {}'.format(datetime.now().strftime('%d/%M/%Y @ %H:%M')))
 add_logo('static/images/small-logo-carre-quadri-SBVR.jpg')
 dashboard()
+
+# update page every 10 mins
+st_autorefresh(interval=10 * 60 * 1000, key="dashboardrefresh")
+
