@@ -66,6 +66,8 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
         dataType = 8
     elif unit_symbol == "m3/s":
         dataType = 5
+    elif unit_symbol == "mm/h":
+        dataType = 4
 
     parameters = {
         "stationId" :  station_id,
@@ -87,6 +89,27 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
             return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id'])
         samples.columns =['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id']
         samples['timestamp'] = pd.to_datetime(samples['timestamp'], unit='ms', utc=True)
+        #Perform post computations
+        if unit_symbol == "mm/h":
+            #print('0 ---------------')
+            #print(samples['numeric_value'])
+            computed_samples= samples.set_index(pd.DatetimeIndex(samples['timestamp'])).resample("60min").mean(numeric_only=True) #resample per hour
+            #print('1 ---------------')
+            #print(computed_samples)
+            computed_samples = computed_samples.diff(periods=1) #difference with following row
+            #print('2 ---------------')
+            #print(computed_samples)
+            computed_samples['numeric_value'] = computed_samples['numeric_value'] * 1000.0 #convert to mm
+            #print('3 ---------------')
+            #print(computed_samples)
+            computed_samples = computed_samples.rolling(3).mean() #mean over 3h for a better visualization
+            #print('4 ---------------')
+            #print(computed_samples)
+            computed_samples['timestamp'] = pd.to_datetime(computed_samples.index, unit='ms', utc=True)
+            #print(computed_samples)
+            return computed_samples
+        
+
         return samples
     else:
         return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id'])
@@ -114,6 +137,15 @@ def m_getAllSeuils(station_id, unit_symbol=''):
         dataType = 8
     elif unit_symbol == "m3/s":
         dataType = 5
+    if unit_symbol == "mm/h": #Define empirical thresolds
+        seuils = pd.DataFrame(data={'id':[1], 'code':[ 'dangerous_rising_level'],'name':['Niveau de montée anormal'],'value':[100],'color':['red'],'isOverrunThreshold':[True],'dataType':[0],'htmlColor':['#FF8800']})
+            
+        #columns = ['id','code','name','value','color','isOverrunThreshold','dataType','htmlColor'])
+
+        return seuils
+
+    else:
+        dataType = 0
 
     if seuils.shape[0] == 0:
         return pd.DataFrame(columns = ['id','code','name','value','color','isOverrunThreshold','dataType','htmlColor'])

@@ -93,9 +93,9 @@ def dashboard():
         stations[2] = "Saint Julien sur R."
         stations[11] = "Viriat"
         stations[5] = "Baudières"
-        stations[12] = "Pont de vaux"
+        #stations[12] = "Pont de vaux"
         
-        nb_days = 1
+        nb_days = 2
         today = datetime.now()
         two_days_ago = today - timedelta(days=nb_days)
         
@@ -103,12 +103,14 @@ def dashboard():
         ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
         ts_end = int(round(today.timestamp()*1000.0))
 
-        type_values = ['m','m3/s','°C', 'V']
+        type_values = ['mm/h','m','m3/s','°C', 'V']
         
         for idx, type_value in enumerate(type_values):
             #st.dataframe(samples)
             if type_value == "m":
                 st.subheader("Hauteur d'eau")
+            elif type_value == "mm/h":
+                st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
             elif type_value == "°C":
                 st.subheader("Température")
             elif type_value == "V":
@@ -142,12 +144,12 @@ def dashboard():
                         date_diff_hour = (date_diff.total_seconds()/3600)
 
                         #st.warning(date_diff_hour)
-                        if (date_diff_hour<=1): #everything seems OK
-                            st.metric(":large_green_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value), delta="{}".format(round(m_dif,3)))
+                        if (date_diff_hour<=2): #everything seems OK
+                            st.metric(":large_green_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
                         elif (date_diff_hour>1 and date_diff_hour <=6) : #paid attention...
-                            st.metric(":large_orange_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value), delta="{}".format(round(m_dif,3)))
+                            st.metric(":large_orange_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
                         else: #something wrong...
-                            st.metric(":red_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value), delta="{}".format(round(m_dif,3)))
+                            st.metric(":red_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
                             
                         #simple graph
                         #st.line_chart(data,x='date', y='numeric_value')
