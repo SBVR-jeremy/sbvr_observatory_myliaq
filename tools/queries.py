@@ -105,6 +105,8 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
             computed_samples = computed_samples.rolling(3).mean() #mean over 3h for a better visualization
             #print('4 ---------------')
             #print(computed_samples)
+            computed_samples['numeric_value'] = round(computed_samples['numeric_value'],1) #round values
+
             computed_samples['timestamp'] = pd.to_datetime(computed_samples.index, unit='ms', utc=True)
             #print(computed_samples)
             return computed_samples
