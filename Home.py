@@ -95,8 +95,8 @@ def dashboard():
         stations[5] = "Baudières"
         #stations[12] = "Pont de vaux"
         
-        nb_days = 6
-        today = datetime.now()
+        nb_days = 3
+        today = datetime.now(timezone.utc)
         two_days_ago = today - timedelta(days=nb_days)
         
         #timestamp in milliseconds
@@ -140,8 +140,9 @@ def dashboard():
                         st.markdown(f'<a href="https://reyssouze.myliaq.fr/#/station/hydrometry/{station_id}/dashboard" target="_blank"><h3>:green[{station_name}]</h3></a>', unsafe_allow_html=True)
                         
                         #MAJ indicator
-                        date_diff = datetime.now(timezone.utc)- (last_record.timestamp.item())
-                        date_diff_hour = (date_diff.total_seconds()/3600)
+                        #date_diff = datetime.now(timezone.utc)- (last_record.timestamp.item())
+                        date_diff = int(round(datetime.now(timezone.utc).timestamp())) - int(round(last_record.timestamp.item().timestamp()))
+                        date_diff_hour = (date_diff/3600)
 
                         #st.warning(date_diff_hour)
                         if (date_diff_hour<=2): #everything seems OK

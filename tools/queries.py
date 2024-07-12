@@ -18,6 +18,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
+import pytz
 import re
 import json
 import requests
@@ -43,6 +44,7 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
         ts_start = start_date
     
     if end_date is None : 
+        today = datetime.datetime.now(datetime.timezone.utc)
         ts_end = int(round(today.timestamp()*1000.0))
     else:
         ts_end = end_date
@@ -88,7 +90,7 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
         if samples.shape[0] == 0:
             return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id', 'unknown'])
         samples.columns =['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id', 'unknown']
-        samples['timestamp'] = pd.to_datetime(samples['timestamp'], unit='ms', utc=True)
+        samples['timestamp'] = pd.to_datetime(samples['timestamp'], unit='ms', utc=True).map(lambda x: x.astimezone(pytz.timezone('Europe/Paris')).replace(tzinfo=pytz.UTC))
         #Perform post computations
         if unit_symbol == "mm/h":
             #print('0 ---------------')
