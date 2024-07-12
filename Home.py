@@ -144,8 +144,8 @@ def dashboard():
                         date_diff = int(round(datetime.now(timezone.utc).timestamp())) - int(round(last_record.timestamp.item().timestamp()))
                         date_diff_hour = (date_diff/3600)
 
-                        #st.warning(date_diff_hour)
-                        if (date_diff_hour<=2): #everything seems OK
+                        st.warning(date_diff_hour)
+                        if (date_diff_hour<=1): #everything seems OK
                             st.metric(":large_green_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
                         elif (date_diff_hour>1 and date_diff_hour <=6) : #paid attention...
                             st.metric(":large_orange_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
