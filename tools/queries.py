@@ -86,8 +86,8 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
         samples = pd.read_json(response.text)
         #print(samples.shape[0])
         if samples.shape[0] == 0:
-            return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id'])
-        samples.columns =['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id']
+            return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id', 'unknown'])
+        samples.columns =['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id', 'unknown']
         samples['timestamp'] = pd.to_datetime(samples['timestamp'], unit='ms', utc=True)
         #Perform post computations
         if unit_symbol == "mm/h":
@@ -114,7 +114,7 @@ def m_getAllSamplesAnalyse(station_id, unit_symbol,unit_fk=None, start_date=None
 
         return samples
     else:
-        return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id'])
+        return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification','pointInitial','station_id', 'unknown'])
 
 #@st.cache_data(ttl=3600)
 def m_getAllSeuils(station_id, unit_symbol=''):
@@ -139,7 +139,7 @@ def m_getAllSeuils(station_id, unit_symbol=''):
         dataType = 8
     elif unit_symbol == "m3/s":
         dataType = 5
-    if unit_symbol == "mm/h": #Define empirical thresolds
+    elif unit_symbol == "mm/h": #Define empirical thresolds
         seuils = pd.DataFrame(data={'id':[1], 'code':[ 'dangerous_rising_level'],'name':['Niveau de montée anormal'],'value':[100],'color':['red'],'isOverrunThreshold':[True],'dataType':[0],'htmlColor':['#FF8800']})
             
         #columns = ['id','code','name','value','color','isOverrunThreshold','dataType','htmlColor'])

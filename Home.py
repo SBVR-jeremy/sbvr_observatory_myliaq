@@ -95,7 +95,7 @@ def dashboard():
         stations[5] = "Baudières"
         #stations[12] = "Pont de vaux"
         
-        nb_days = 2
+        nb_days = 6
         today = datetime.now()
         two_days_ago = today - timedelta(days=nb_days)
         
