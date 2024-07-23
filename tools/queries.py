@@ -161,3 +161,22 @@ def m_getAllSeuils(station_id, unit_symbol=''):
         seuils_filtered = seuils.query('dataType == @dataType')
         #print(seuils_filtered)
     return seuils_filtered
+
+
+#@st.cache_data(ttl=3600)
+def m_getStation(station_id):
+    
+    url = "https://reyssouze.myliaq.fr/api/hydrologicalStation/{}".format(station_id)
+    headers = {
+        "Content-Type" : "application/json; charset=utf-8",
+        "Authorization" : 'Bearer '+st.secrets["myliaq"]["api_key"]
+    }
+
+    response = requests.get(url, headers=headers )
+    #print("Status Code", response.status_code)
+    #print("JSON Response ", response.json())
+
+    #stations = pd.read_json(response.text)
+    #print(response.json())
+    
+    return response.json()
