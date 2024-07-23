@@ -66,31 +66,7 @@ hide_streamlit_credits()
 
 add_logo('static/images/small-logo-carre-quadri-SBVR.jpg')
 
-#handle authentication to add sample devices
-if "authentication_status" not in st.session_state:
-     st.session_state['name'] = None
-     st.session_state['username'] = None
-     st.session_state['authentication_status'] = None
-     st.session_state['logout'] = None
-
-if "config" not in st.session_state:
-    with open('./.streamlit/authentication.yaml') as file:
-        st.session_state.config = yaml.load(file, Loader=SafeLoader)
-
-st.session_state.authenticator = stauth.Authenticate(
-    st.session_state.config['credentials'],
-    st.session_state.config['cookie']['name'],
-    st.session_state.config['cookie']['key'],
-    st.session_state.config['cookie']['expiry_days'],
-    st.session_state.config['preauthorized']
-)
-
-
-st.session_state.authenticator._check_cookie()
-
 st.markdown("# Stats reférence")
-
-
 
 st.text("Q-X : Maximum annuels des débits instantanés (m3/s)")
 stations = dict()
