@@ -63,26 +63,27 @@ import math
 # FUNCTIONS
 # ---------------------------------------------------------------------------------------------
 def previs():
-    expander = st.expander(":sun_small_cloud: Prévi METEO")
-    with expander:
-        [col1,col2,col3] = st.columns(3)
-        #meteoblue Bourg en bresse
-        with col1:
-            components.iframe(
-                "https://www.meteoblue.com/en/weather/widget/daily/bourg-en-bresse_france_3031009?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
+    with st.spinner('Chargement'):
+        expander = st.expander(":sun_small_cloud: Prévi METEO")
+        with expander:
+            [col1,col2,col3] = st.columns(3)
+            #meteoblue Bourg en bresse
+            with col1:
+                components.iframe(
+                    "https://www.meteoblue.com/en/weather/widget/daily/bourg-en-bresse_france_3031009?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
+                    , height=420, width=300)
+            
+            #meteoblue montrevel
+            with col2:
+                components.iframe(
+                    "https://www.meteoblue.com/en/weather/widget/daily/montrevel-en-bresse_france_2992050?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
+                    , height=420, width=300)
+            
+            #meteoblue Pont de vau
+            with col3:
+                components.iframe(
+                "https://www.meteoblue.com/en/weather/widget/daily/pont-de-vaux_france_2986227?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
                 , height=420, width=300)
-        
-        #meteoblue montrevel
-        with col2:
-            components.iframe(
-                "https://www.meteoblue.com/en/weather/widget/daily/montrevel-en-bresse_france_2992050?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
-                , height=420, width=300)
-        
-        #meteoblue Pont de vau
-        with col3:
-            components.iframe(
-            "https://www.meteoblue.com/en/weather/widget/daily/pont-de-vaux_france_2986227?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
-            , height=420, width=300)
 
 def dashboard():
     
@@ -127,130 +128,131 @@ def dashboard():
         type_values = ['mm/h','m','m3/s','°C', 'V']
         
         for idx, type_value in enumerate(type_values):
-            #st.dataframe(samples)
-            if type_value == "m":
-                #st.subheader("Hauteur d'eau")
-                expander = st.expander(":straight_ruler: Hauteur d'eau")
-            elif type_value == "mm/h":
-                #st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
-                expander = st.expander(":new: Vitesse de montée des eaux (moy 3h)")
-            elif type_value == "°C":
-                #st.subheader("Température")
-                expander = st.expander(":thermometer: Température")
-            elif type_value == "V":
-                #st.subheader("Batterie")
-                expander = st.expander(":battery: Batterie")
-            elif type_value == "m3/s":
-                #st.subheader("Débit")
-                expander = st.expander(":chart_with_upwards_trend: Débit")
-            
-            with expander:
-                cols = st.columns((len(stations)))
-                idx = 0
-                for station_id in stations:
-                    samples = m_getAllSamplesAnalyse(station_id,type_value,start_date=ts_start,end_date=ts_end)
-                    #st.line_chart(samples, x='timestamp', y='numeric_value')
-                    if samples.shape[0] == 0:
-                        idx += 1
-                        continue
+            with st.spinner('Chargement...'):
+                #st.dataframe(samples)
+                if type_value == "m":
+                    #st.subheader("Hauteur d'eau")
+                    expander = st.expander(":straight_ruler: Hauteur d'eau")
+                elif type_value == "mm/h":
+                    #st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
+                    expander = st.expander(":new: Vitesse de montée des eaux (moy 3h)")
+                elif type_value == "°C":
+                    #st.subheader("Température")
+                    expander = st.expander(":thermometer: Température")
+                elif type_value == "V":
+                    #st.subheader("Batterie")
+                    expander = st.expander(":battery: Batterie")
+                elif type_value == "m3/s":
+                    #st.subheader("Débit")
+                    expander = st.expander(":chart_with_upwards_trend: Débit")
+                
+                with expander:
+                    cols = st.columns((len(stations)))
+                    idx = 0
+                    for station_id in stations:
+                        samples = m_getAllSamplesAnalyse(station_id,type_value,start_date=ts_start,end_date=ts_end)
+                        #st.line_chart(samples, x='timestamp', y='numeric_value')
+                        if samples.shape[0] == 0:
+                            idx += 1
+                            continue
 
-                    with cols[idx]:
-                        station_name = stations[station_id]
+                        with cols[idx]:
+                            station_name = stations[station_id]
 
-                        try:
-                            last_record = samples.tail(1)
-                            pre_last_record = samples.tail(2).head(1)
-                            m_dif= last_record.numeric_value.item() - pre_last_record.numeric_value.item()
-                            #st.warning(pre_last_record)
-                            #st.warning(last_record)
-                            #st.markdown(f"[:green[{station_name}]](/station/{station})")
-                            st.markdown(f'<a href="https://reyssouze.myliaq.fr/#/station/hydrometry/{station_id}/dashboard" target="_blank"><h3>:green[{station_name}]</h3></a>', unsafe_allow_html=True)
-                            
-                            #MAJ indicator
-                            #date_diff = datetime.now(timezone.utc)- (last_record.timestamp.item())
-                            date_diff = int(round(datetime.now(timezone.utc).timestamp())) - int(round(last_record.timestamp.item().timestamp()))
-                            date_diff_hour = (date_diff/3600)
-
-                            #st.warning(date_diff_hour)
-                            if (date_diff_hour<=1): #everything seems OK
-                                st.metric(":large_green_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
-                            elif (date_diff_hour>1 and date_diff_hour <=6) : #paid attention...
-                                st.metric(":large_orange_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
-                            else: #something wrong...
-                                st.metric(":red_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
+                            try:
+                                last_record = samples.tail(1)
+                                pre_last_record = samples.tail(2).head(1)
+                                m_dif= last_record.numeric_value.item() - pre_last_record.numeric_value.item()
+                                #st.warning(pre_last_record)
+                                #st.warning(last_record)
+                                #st.markdown(f"[:green[{station_name}]](/station/{station})")
+                                st.markdown(f'<a href="https://reyssouze.myliaq.fr/#/station/hydrometry/{station_id}/dashboard" target="_blank"><h3>:green[{station_name}]</h3></a>', unsafe_allow_html=True)
                                 
-                            #simple graph
-                            #st.line_chart(data,x='date', y='numeric_value')
+                                #MAJ indicator
+                                #date_diff = datetime.now(timezone.utc)- (last_record.timestamp.item())
+                                date_diff = int(round(datetime.now(timezone.utc).timestamp())) - int(round(last_record.timestamp.item().timestamp()))
+                                date_diff_hour = (date_diff/3600)
 
-                            #nicer graph
-                            #selection = alt.selection_multi(fields=['ust'], bind='legend')
-                            
-                            if type_value == 'm':
-                                #zoom on y axis - 10cm over and above
-                                y_min = samples.min(numeric_only=True).numeric_value - 0.1
-                                y_max = samples.max(numeric_only=True).numeric_value + 0.1
+                                #st.warning(date_diff_hour)
+                                if (date_diff_hour<=1): #everything seems OK
+                                    st.metric(":large_green_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
+                                elif (date_diff_hour>1 and date_diff_hour <=6) : #paid attention...
+                                    st.metric(":large_orange_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
+                                else: #something wrong...
+                                    st.metric(":red_circle: MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M")), "{} {}".format(round(last_record.numeric_value.item(),3),type_value)) #, delta="{}".format(round(m_dif,3)))
+                                    
+                                #simple graph
+                                #st.line_chart(data,x='date', y='numeric_value')
 
-                                m_domain = [y_min, y_max]
-                            else:
-                                #zoom on y axis - 0.5° ove and above
-                                y_min = samples.min(numeric_only=True).numeric_value - 0.5
-                                y_max = samples.max(numeric_only=True).numeric_value + 0.5
+                                #nicer graph
+                                #selection = alt.selection_multi(fields=['ust'], bind='legend')
+                                
+                                if type_value == 'm':
+                                    #zoom on y axis - 10cm over and above
+                                    y_min = samples.min(numeric_only=True).numeric_value - 0.1
+                                    y_max = samples.max(numeric_only=True).numeric_value + 0.1
 
-                                m_domain = [y_min, y_max]
-                            
-                            
-                            c = alt.Chart(samples).mark_line(interpolate='monotone',point=True).transform_calculate(
-                                combined_tooltip = "datum.numeric_value"
-                            ).encode(
-                                alt.X('timestamp:T', axis = alt.Axis(tickCount="hour", ticks = True, title = '', 
-                                                                            #labelAngle=-75,
-                                                                            labelExpr="[timeFormat(datum.value, '%H:%M'),  timeFormat(datum.value, '%H') == '00' ? timeFormat(datum.value, '%d-%m-%Y') : '', timeFormat(datum.value, '%m') == '01' ? timeFormat(datum.value, '%Y') : '']")),
-                                alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=''), scale=alt.Scale(domain=m_domain)),
-                                #alt.Color('ust:N',legend=alt.Legend(title='Données')),
-                                #alt.Color('ust:N',legend=None),
-                                #opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
-                                tooltip=[
-                                    alt.Tooltip("timestamp:T",  format="%Y-%m-%d@%H:%M:%S", title="Date (local)"), 
-                                    alt.Tooltip("combined_tooltip:N", title="Valeur"), 
-                                    #alt.Tooltip("ust:N", title="Variable")
-                                ]
-                            #).add_selection(
-                            #    selection
-                            ).properties(
-                                height=200
-                            ).interactive()
+                                    m_domain = [y_min, y_max]
+                                else:
+                                    #zoom on y axis - 0.5° ove and above
+                                    y_min = samples.min(numeric_only=True).numeric_value - 0.5
+                                    y_max = samples.max(numeric_only=True).numeric_value + 0.5
 
-                            #recup des seuils
-                            seuils = m_getAllSeuils(station_id,type_value)
-                            #print(seuils)
-                            m_chart = c
-                            if seuils.shape[0] > 0:
-                                for index, seuil in seuils.iterrows():
-                                    try:
-                                        if str(seuil.htmlColor) == 'nan': 
+                                    m_domain = [y_min, y_max]
+                                
+                                
+                                c = alt.Chart(samples).mark_line(interpolate='monotone',point=True).transform_calculate(
+                                    combined_tooltip = "datum.numeric_value"
+                                ).encode(
+                                    alt.X('timestamp:T', axis = alt.Axis(tickCount="hour", ticks = True, title = '', 
+                                                                                #labelAngle=-75,
+                                                                                labelExpr="[timeFormat(datum.value, '%H:%M'),  timeFormat(datum.value, '%H') == '00' ? timeFormat(datum.value, '%d-%m-%Y') : '', timeFormat(datum.value, '%m') == '01' ? timeFormat(datum.value, '%Y') : '']")),
+                                    alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=''), scale=alt.Scale(domain=m_domain)),
+                                    #alt.Color('ust:N',legend=alt.Legend(title='Données')),
+                                    #alt.Color('ust:N',legend=None),
+                                    #opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
+                                    tooltip=[
+                                        alt.Tooltip("timestamp:T",  format="%Y-%m-%d@%H:%M:%S", title="Date (local)"), 
+                                        alt.Tooltip("combined_tooltip:N", title="Valeur"), 
+                                        #alt.Tooltip("ust:N", title="Variable")
+                                    ]
+                                #).add_selection(
+                                #    selection
+                                ).properties(
+                                    height=200
+                                ).interactive()
+
+                                #recup des seuils
+                                seuils = m_getAllSeuils(station_id,type_value)
+                                #print(seuils)
+                                m_chart = c
+                                if seuils.shape[0] > 0:
+                                    for index, seuil in seuils.iterrows():
+                                        try:
+                                            if str(seuil.htmlColor) == 'nan': 
+                                                m_color = 'black'
+                                            else:
+                                                m_color = str(seuil.htmlColor)
+                                        except:
                                             m_color = 'black'
-                                        else:
-                                            m_color = str(seuil.htmlColor)
-                                    except:
-                                        m_color = 'black'
 
-                                    try:
-                                        m_text = str(seuil['name'])
-                                    except:
-                                        m_text = ""
-                    
-                                    m_s = alt.Chart(pd.DataFrame({'y': [seuil.value]})).mark_rule(color=m_color).encode(y='y')
-                                    m_t = alt.Chart(pd.DataFrame({'y': [seuil.value]})).mark_text(text=m_text).encode(y='y')
-                                    m_chart = m_chart + m_s +m_t
-
-                            
-                            st.altair_chart(m_chart, use_container_width=True)             
-
-                        except Exception as e:
-                            st.error(e)
-                            raise e
+                                        try:
+                                            m_text = str(seuil['name'])
+                                        except:
+                                            m_text = ""
                         
-                    idx += 1
+                                        m_s = alt.Chart(pd.DataFrame({'y': [seuil.value]})).mark_rule(color=m_color).encode(y='y')
+                                        m_t = alt.Chart(pd.DataFrame({'y': [seuil.value]})).mark_text(text=m_text).encode(y='y')
+                                        m_chart = m_chart + m_s +m_t
+
+                                
+                                st.altair_chart(m_chart, use_container_width=True)             
+
+                            except Exception as e:
+                                st.error(e)
+                                raise e
+                            
+                        idx += 1
                          
 
 # ---------------------------------------------------------------------------------------------
