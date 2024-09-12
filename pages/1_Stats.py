@@ -85,7 +85,7 @@ for station_id in stations:
 
 
 df = pd.DataFrame(stations_filtered)
-st.write(df.to_html(escape=False,index=False, header=False), unsafe_allow_html=True)
+st.write(df.to_html(escape=False,index=True, header=False), unsafe_allow_html=True)
 
 st.markdown("# Seuils")
 type_values = ['m','m3/s']
