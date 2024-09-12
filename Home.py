@@ -128,25 +128,31 @@ def dashboard():
         type_values = ['mm/h','m','m3/s','°C', 'V']
         
         for idx, type_value in enumerate(type_values):
-            with st.spinner('Chargement...'):
-                #st.dataframe(samples)
-                if type_value == "m":
-                    #st.subheader("Hauteur d'eau")
-                    expander = st.expander(":straight_ruler: Hauteur d'eau")
-                elif type_value == "mm/h":
-                    #st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
-                    expander = st.expander(":new: Vitesse de montée des eaux (moy 3h)")
-                elif type_value == "°C":
-                    #st.subheader("Température")
-                    expander = st.expander(":thermometer: Température")
-                elif type_value == "V":
-                    #st.subheader("Batterie")
-                    expander = st.expander(":battery: Batterie")
-                elif type_value == "m3/s":
-                    #st.subheader("Débit")
-                    expander = st.expander(":chart_with_upwards_trend: Débit")
-                
-                with expander:
+            
+            #st.dataframe(samples)
+            if type_value == "m":
+                #st.subheader("Hauteur d'eau")
+                expander = st.expander(":straight_ruler: Hauteur d'eau")
+                spinner = st.spinner("Chargement Hauteur d'eau...")
+            elif type_value == "mm/h":
+                #st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
+                expander = st.expander(":new: Vitesse de montée des eaux (moy 3h)")
+                spinner = st.spinner("Chargement Vitesse de montée des eaux...")
+            elif type_value == "°C":
+                #st.subheader("Température")
+                expander = st.expander(":thermometer: Température")
+                spinner = st.spinner("Chargement Température...")
+            elif type_value == "V":
+                #st.subheader("Batterie")
+                expander = st.expander(":battery: Batterie")
+                spinner = st.spinner("Chargement Batterie...")
+            elif type_value == "m3/s":
+                #st.subheader("Débit")
+                expander = st.expander(":chart_with_upwards_trend: Débit")
+                spinner = st.spinner("Chargement Débit...")
+            
+            with expander:
+                with spinner:
                     cols = st.columns((len(stations)))
                     idx = 0
                     for station_id in stations:
