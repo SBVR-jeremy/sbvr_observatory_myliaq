@@ -126,32 +126,51 @@ def dashboard():
         ts_end = int(round(today.timestamp()*1000.0))
 
         type_values = ['mm/h','m','m3/s','°C', 'V']
-        
+        expanders = []
+        spinners = []
+        placeholders = []
+
+        #create expanders first
         for idx, type_value in enumerate(type_values):
             
             #st.dataframe(samples)
             if type_value == "m":
                 #st.subheader("Hauteur d'eau")
-                expander = st.expander(":straight_ruler: Hauteur d'eau")
-                spinner = st.spinner("Chargement Hauteur d'eau...")
+                m_title = ":straight_ruler: Hauteur d'eau"
+                m_loading_title = "Chargement Hauteur d'eau..."
             elif type_value == "mm/h":
                 #st.subheader(":new: Vitesse de montée des eaux (moy 3h)")
-                expander = st.expander(":new: Vitesse de montée des eaux (moy 3h)")
-                spinner = st.spinner("Chargement Vitesse de montée des eaux...")
+                m_title = ":new: Vitesse de montée des eaux (moy 3h)"
+                m_loading_title = "Chargement Vitesse de montée des eaux..."
             elif type_value == "°C":
                 #st.subheader("Température")
-                expander = st.expander(":thermometer: Température")
-                spinner = st.spinner("Chargement Température...")
+                m_title = ":thermometer: Température"
+                m_loading_title = "Chargement Température..."
             elif type_value == "V":
                 #st.subheader("Batterie")
-                expander = st.expander(":battery: Batterie")
-                spinner = st.spinner("Chargement Batterie...")
+                m_title = ":battery: Batterie"
+                m_loading_title = "Chargement Batterie..."
             elif type_value == "m3/s":
                 #st.subheader("Débit")
-                expander = st.expander(":chart_with_upwards_trend: Débit")
-                spinner = st.spinner("Chargement Débit...")
+                m_title = ":chart_with_upwards_trend: Débit"
+                m_loading_title = "Chargement Débit..."
             
+            
+            expander = st.expander(m_title)
+            #add placeholder
             with expander:
+                placeholder = st.empty()
+                placeholder.text(m_loading_title)    
+                placeholders.append(placeholder)
+
+        
+        #loop over type_values
+        for idx, type_value in enumerate(type_values):
+            
+            m_placeholder = placeholders[idx]
+            m_placeholder.empty()
+            with m_placeholder.container():
+                spinner = st.spinner("Chargement des données en cours...")
                 with spinner:
                     cols = st.columns((len(stations)))
                     idx = 0
