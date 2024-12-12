@@ -89,7 +89,12 @@ st.write(df.to_html(escape=False,index=True, header=False), unsafe_allow_html=Tr
 
 st.markdown("# Seuils")
 type_values = ['m','m3/s']
-        
+
+#Append stations
+stations[11] = {'code': 'U4014010', 'name':"Viriat"}
+stations[5] = {'code': 'U4014010', 'name':"Baudières"}
+stations[54] = {'code': 'U4014010', 'name':"Cras"}
+
 for idx, type_value in enumerate(type_values):
     #st.dataframe(samples)
     if type_value == "m":
