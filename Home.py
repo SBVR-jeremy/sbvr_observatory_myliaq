@@ -115,7 +115,7 @@ def dashboard():
         stations[2] = "Saint Julien sur R."
         stations[11] = "Viriat"
         stations[5] = "Baudières"
-        #stations[12] = "Pont de vaux"
+        stations[54] = "Cras"
         
         nb_days = 3
         today = datetime.now(timezone.utc)
