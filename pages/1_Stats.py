@@ -91,9 +91,9 @@ st.markdown("# Seuils")
 type_values = ['m','m3/s']
 
 #Append stations
-stations[11] = {'code': 'U4014010', 'name':"Viriat"}
-stations[5] = {'code': 'U4014010', 'name':"Baudières"}
-stations[54] = {'code': 'U4014010', 'name':"Cras"}
+stations[11] = {'code': 'U4014010', 'name':"Viriat",'Q2': None, 'Q2_min':None , 'Q2_max' : None ,'Q5': None, 'Q5_min': None, 'Q5_max' : None, 'Q10': None, 'Q10_min': None, 'Q10_max' :None, 'Q20': None, 'Q20_min': None, 'Q20_max' : None, 'Q50': None, 'Q50_min': None, 'Q50_max' : None }
+stations[5] = {'code': 'U4014010', 'name':"Baudières",'Q2': None, 'Q2_min':None , 'Q2_max' : None ,'Q5': None, 'Q5_min': None, 'Q5_max' : None, 'Q10': None, 'Q10_min': None, 'Q10_max' :None, 'Q20': None, 'Q20_min': None, 'Q20_max' : None, 'Q50': None, 'Q50_min': None, 'Q50_max' : None }
+stations[54] = {'code': 'U4014010', 'name':"Cras",'Q2': None, 'Q2_min':None , 'Q2_max' : None ,'Q5': None, 'Q5_min': None, 'Q5_max' : None, 'Q10': None, 'Q10_min': None, 'Q10_max' :None, 'Q20': None, 'Q20_min': None, 'Q20_max' : None, 'Q50': None, 'Q50_min': None, 'Q50_max' : None }
 
 for idx, type_value in enumerate(type_values):
     #st.dataframe(samples)
@@ -111,7 +111,7 @@ for idx, type_value in enumerate(type_values):
     for station_id in stations:
         # print station
         station = m_getStation(station_id)
-        st.text(station['code'][:8]+" - "+station['name'])
+        st.text(station['code'][:8]+" - "+stations[station_id]['name'])
         #st.link_button(station['code'][:8]+" - "+station['name'], "https://www.hydroportail.developpement-durable.gouv.fr/sitehydro/"+station['code'][:8]+"/synthese/regime/hautes-eaux")
         #recup des seuils
         seuils = m_getAllSeuils(station_id,type_value)

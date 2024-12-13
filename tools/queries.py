@@ -177,6 +177,7 @@ def m_getStation(station_id):
     #print("JSON Response ", response.json())
 
     #stations = pd.read_json(response.text)
+    #print(stations)
     #print(response.json())
     
     return response.json()
