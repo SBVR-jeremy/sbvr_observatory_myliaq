@@ -52,7 +52,7 @@ def hide_rainbow_bar():
                     padding-right: 5rem;
                 }
         [data-testid="stSidebarNav"] {
-            padding-top: 52px;
+            padding-top: 200px !important;
         }
         
     </style>

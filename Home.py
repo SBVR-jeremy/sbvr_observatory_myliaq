@@ -79,11 +79,114 @@ def previs():
                     "https://www.meteoblue.com/en/weather/widget/daily/montrevel-en-bresse_france_2992050?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
                     , height=420, width=300)
             
-            #meteoblue Pont de vau
+            #meteoblue Pont de vaux
             with col3:
                 components.iframe(
                 "https://www.meteoblue.com/en/weather/widget/daily/pont-de-vaux_france_2986227?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
                 , height=420, width=300)
+
+def niveauAlerte():
+    with st.spinner('Chargement'):
+        expander = st.expander(":warning: Niveau Alerte")
+        with expander:
+            [col1] = st.columns(1)
+
+            stations = dict()
+            #stations[4] = "Majornas"
+            #stations[3] = "Montagnat"
+            #stations[1] = "Saone à Macon"
+            #stations[2] = "Saint Julien sur R."
+            #stations[11] = "Viriat"
+            stations[5] = "Baudières"
+            stations[54] = "Cras"
+
+            nb_days = 3
+            today = datetime.now(timezone.utc)
+            two_days_ago = today - timedelta(days=nb_days)
+            
+            #timestamp in milliseconds
+            ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
+            ts_end = int(round(today.timestamp()*1000.0))
+
+            type_values = ['m']
+
+            #Station Baudières
+            with col1:
+                #  #TODO : #recup des seuils at echelle
+                #                 seuils = m_getAllSeuils(station_id,type_value)
+                #                 #print(seuils)
+                #                 m_chart = c
+                #                 if seuils.shape[0] > 0:
+                #                     for index, seuil in seuils.iterrows():
+                #                         try:
+                #                             if str(seuil.htmlColor) == 'nan': 
+                #                                 m_color = 'black'
+                #                             else:
+                #                                 m_color = str(seuil.htmlColor)
+                #                         except:
+                #                             m_color = 'black'
+
+                #                         try:
+                #                             m_text = str(seuil['name'])
+                #                         except:
+                #                             m_text = ""
+                        
+                chart_data = pd.DataFrame(
+                    {
+                        "station": ["Baudières", "Cras"],
+                        "7_Crise_crue" : [1, 1],
+                        "6_Alerte_crue" : [0.1, 0.3],
+                        "5_Vigilance_crue" : [0.5, 0.260],
+                        "4_Normale" : [0.4, 1.326],
+                        "3_Vigilance_secheresse" : [0.2,0],
+                        "2_Alerte_secheresse" : [0,0],
+                        "1_Alerte_renforcée_secheresse" : [0,0],
+                        "0_Crise_secheresse" : [0.1,0],
+                    }
+                )
+                #Debug 
+                #print(chart_data)
+
+                domain = ["7_Crise_crue","6_Alerte_crue", "5_Vigilance_crue", "4_Normale", "3_Vigilance_secheresse", "2_Alerte_secheresse","1_Alerte_renforcée_secheresse","0_Crise_secheresse"]
+                range_ = ['#000044', '#880088', '#0088FF', '#0000FF', '#00FF00', '#FFFF00', '#FF8800', '#FF0000']
+
+                chart = (
+                    alt.Chart(chart_data)
+                    .transform_fold(
+                        fold=domain,
+                        as_=["seuil","value"])
+                    .mark_bar()
+                    .encode(
+                        x=alt.X("station:N", title=""),
+                        y=alt.Y("value:Q", title=""),
+                        color=alt.Color("seuil:N").scale(domain=domain, range=range_),
+                        order=alt.Order("seuil:N", sort="ascending"),
+                     )
+                )
+                #st.altair_chart(chart, use_container_width=True)
+
+                annotations_df = pd.DataFrame(columns=["index", "value", "marker", "description"])
+
+                for station_id in stations:
+                    samples = m_getAllSamplesAnalyse(station_id,'m',start_date=ts_start,end_date=ts_end)
+                    #st.line_chart(samples, x='timestamp', y='numeric_value')
+                    if samples.shape[0] != 0:
+                        last_record = samples.tail(1)
+                        annotations_df.loc[-1] = [stations[station_id], "{}".format(round(last_record.numeric_value.item(),3)), "◀{}m▶ ".format(round(last_record.numeric_value.item(),3)), "MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M"))]
+                        annotations_df.index = annotations_df.index + 1
+                        annotations_df = annotations_df.sort_index()
+                
+                
+                annotation_layer = (
+                    alt.Chart(annotations_df)
+                    .mark_text(size=20, dx=-10, dy=0, align="left", color='black')
+                    .encode(x="index:N", y=alt.Y("value:Q"), text="marker", tooltip="description")
+                )
+
+                combined_chart = chart + annotation_layer
+                st.altair_chart(combined_chart, use_container_width=True)
+            
+            
 
 def dashboard():
     
@@ -307,6 +410,7 @@ st.title('SBVR Observatoire MYLIAQ')
 st.text('MAJ : {}'.format(datetime.now().strftime('%d/%m/%Y @ %H:%M')))
 add_logo('static/images/small-logo-carre-quadri-SBVR.jpg')
 previs()
+niveauAlerte()
 dashboard()
 
 # update page every 10 mins
