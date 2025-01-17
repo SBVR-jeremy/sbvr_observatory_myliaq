@@ -85,18 +85,85 @@ def previs():
                 "https://www.meteoblue.com/en/weather/widget/daily/pont-de-vaux_france_2986227?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light"
                 , height=420, width=300)
 
+def printGraphNiveau(station_id, stations, ts_start, ts_end, unit_symbol='m'):
+    zones = pd.DataFrame(columns=["station","seuil","isOverrunThreshold", "min", "max", "value","color"])
+    zones = m_getAllZones(zones, station_id, unit_symbol)
+
+    if zones.shape[0] > 0:
+        #print(zones)
+        chart = (
+            alt.Chart(zones)
+            .mark_bar()
+            .transform_calculate(
+                v_min= 'round(datum.min * 100) / 100',
+                v_max='round(datum.max * 100) / 100',
+                combined_tooltip = "datum.v_min + '"+ unit_symbol + " <= ' + datum.seuil + ' < ' + datum.v_max + '" + unit_symbol +  "'"
+            )
+            .encode(
+                x=alt.X("station:N", title=""),
+                y=alt.Y("value:Q", title=""),
+                color=alt.Color("color:N").scale(None),
+                tooltip=alt.Tooltip("combined_tooltip:N"),
+                order=alt.Order("min:N", sort="ascending"),
+                )
+        )
+        #st.altair_chart(chart, use_container_width=True)
+
+        annotations_df = pd.DataFrame(columns=["index", "value", "marker", "description"])
+
+        #define text color depending the max value
+        val_max = zones['max'].max()
+        #val_max = 2
+        domainT = [0, val_max/2,  val_max]
+        rangeT_ = ['white', 'white', 'red']
+
+    else:
+        domainT = [0]
+        rangeT_ = ['black']
+
+
+
+    samples = m_getAllSamplesAnalyse(station_id,unit_symbol,start_date=ts_start,end_date=ts_end)
+    annotations_df = pd.DataFrame(columns=["index", "value", "marker", "description"])
+
+    #st.line_chart(samples, x='timestamp', y='numeric_value')
+    if samples.shape[0] != 0:
+        last_record = samples.tail(1)
+        annotations_df.loc[-1] = [station_id, "{}".format(round(last_record.numeric_value.item(),3)), "◀{}{}▶ ".format(round(last_record.numeric_value.item(),3),unit_symbol), "MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M"))]
+        #annotations_df.loc[-1] = [stations[station_id],2, "◀{}m ".format(round(last_record.numeric_value.item(),3)), "MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M"))]
+        annotations_df.index = annotations_df.index + 1
+        annotations_df = annotations_df.sort_index()
+    
+    
+    annotation_layer = (
+        alt.Chart(annotations_df)
+        .mark_text(size=20, dx=-10, dy=0, align="left")
+        .encode(
+            x=alt.X("index:N", title="", axis=alt.Axis(labelExpr=f"{stations}[datum.value]")), 
+            y=alt.Y("value:Q", title=""), 
+            text="marker", 
+            color=alt.Color("value:Q", title="",legend=None).scale(domain=domainT, range=rangeT_), 
+            tooltip="description")
+    )
+
+    
+    if zones.shape[0] > 0:
+        combined_chart = chart + annotation_layer
+    else :
+        combined_chart = annotation_layer
+    st.altair_chart(combined_chart, use_container_width=True)
+
 def niveauAlerte():
+    
     with st.spinner('Chargement'):
         expander = st.expander(":warning: Niveau Alerte")
         with expander:
-            [col1] = st.columns(1)
-
             stations = dict()
             #stations[4] = "Majornas"
             #stations[3] = "Montagnat"
             #stations[1] = "Saone à Macon"
             #stations[2] = "Saint Julien sur R."
-            #stations[11] = "Viriat"
+            stations[11] = "Viriat"
             stations[5] = "Baudières"
             stations[54] = "Cras"
 
@@ -108,83 +175,16 @@ def niveauAlerte():
             ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
             ts_end = int(round(today.timestamp()*1000.0))
 
-            type_values = ['m']
+            type_values = ['m', "°C" , "V" , "m3/s", "mm/h"]
+            unit_symbol = 'm'
 
-            #Station Baudières
-            with col1:
-                #  #TODO : #recup des seuils at echelle
-                #                 seuils = m_getAllSeuils(station_id,type_value)
-                #                 #print(seuils)
-                #                 m_chart = c
-                #                 if seuils.shape[0] > 0:
-                #                     for index, seuil in seuils.iterrows():
-                #                         try:
-                #                             if str(seuil.htmlColor) == 'nan': 
-                #                                 m_color = 'black'
-                #                             else:
-                #                                 m_color = str(seuil.htmlColor)
-                #                         except:
-                #                             m_color = 'black'
+            cols = st.columns((len(stations)))
+            idx = 0
+            for station_id in stations:
+                with cols[idx]:
+                    printGraphNiveau(station_id, stations, ts_start, ts_end, unit_symbol)
+                    idx += 1
 
-                #                         try:
-                #                             m_text = str(seuil['name'])
-                #                         except:
-                #                             m_text = ""
-                        
-                chart_data = pd.DataFrame(
-                    {
-                        "station": ["Baudières", "Cras"],
-                        "7_Crise_crue" : [1, 1],
-                        "6_Alerte_crue" : [0.1, 0.3],
-                        "5_Vigilance_crue" : [0.5, 0.260],
-                        "4_Normale" : [0.4, 1.326],
-                        "3_Vigilance_secheresse" : [0.2,0],
-                        "2_Alerte_secheresse" : [0,0],
-                        "1_Alerte_renforcée_secheresse" : [0,0],
-                        "0_Crise_secheresse" : [0.1,0],
-                    }
-                )
-                #Debug 
-                #print(chart_data)
-
-                domain = ["7_Crise_crue","6_Alerte_crue", "5_Vigilance_crue", "4_Normale", "3_Vigilance_secheresse", "2_Alerte_secheresse","1_Alerte_renforcée_secheresse","0_Crise_secheresse"]
-                range_ = ['#000044', '#880088', '#0088FF', '#0000FF', '#00FF00', '#FFFF00', '#FF8800', '#FF0000']
-
-                chart = (
-                    alt.Chart(chart_data)
-                    .transform_fold(
-                        fold=domain,
-                        as_=["seuil","value"])
-                    .mark_bar()
-                    .encode(
-                        x=alt.X("station:N", title=""),
-                        y=alt.Y("value:Q", title=""),
-                        color=alt.Color("seuil:N").scale(domain=domain, range=range_),
-                        order=alt.Order("seuil:N", sort="ascending"),
-                     )
-                )
-                #st.altair_chart(chart, use_container_width=True)
-
-                annotations_df = pd.DataFrame(columns=["index", "value", "marker", "description"])
-
-                for station_id in stations:
-                    samples = m_getAllSamplesAnalyse(station_id,'m',start_date=ts_start,end_date=ts_end)
-                    #st.line_chart(samples, x='timestamp', y='numeric_value')
-                    if samples.shape[0] != 0:
-                        last_record = samples.tail(1)
-                        annotations_df.loc[-1] = [stations[station_id], "{}".format(round(last_record.numeric_value.item(),3)), "◀{}m▶ ".format(round(last_record.numeric_value.item(),3)), "MAJ ({})".format(utc2local(last_record.timestamp.item()).strftime("%d/%m/%Y @ %H:%M"))]
-                        annotations_df.index = annotations_df.index + 1
-                        annotations_df = annotations_df.sort_index()
-                
-                
-                annotation_layer = (
-                    alt.Chart(annotations_df)
-                    .mark_text(size=20, dx=-10, dy=0, align="left", color='black')
-                    .encode(x="index:N", y=alt.Y("value:Q"), text="marker", tooltip="description")
-                )
-
-                combined_chart = chart + annotation_layer
-                st.altair_chart(combined_chart, use_container_width=True)
             
             
 

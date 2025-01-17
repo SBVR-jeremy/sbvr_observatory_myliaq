@@ -164,6 +164,71 @@ def m_getAllSeuils(station_id, unit_symbol=''):
 
 
 #@st.cache_data(ttl=3600)
+def m_getAllZones(zones, station_id, unit_symbol=''):
+
+    #zones = pd.DataFrame(columns=["station","seuil","isOverrunThreshold", "min", "max", "value","color"])
+    
+    seuils = m_getAllSeuils(station_id,unit_symbol)
+    #oder seuils by value
+    seuils = seuils.sort_values("value", ascending=True)
+    #print (seuils)
+    if seuils.shape[0] > 0:
+        sum_seuils = []
+        sum_v = 0
+        prev_overrun = 0
+        prev_seuilname = ""
+        prev_color = ""
+        for index, seuil in seuils.iterrows():
+            try:
+                if str(seuil.htmlColor) == 'nan': 
+                    m_color = 'black'
+                else:
+                    m_color = str(seuil.htmlColor)
+            except : 
+                m_color = 'black'
+
+            if(seuil.isOverrunThreshold == 0):
+                #zones.loc[stations[station_id],str(str(index)+seuil["name"]+"_min")] = sum_v
+                zones.loc[-1] = {"station": station_id, "seuil": seuil["name"] , "isOverrunThreshold" : seuil.isOverrunThreshold, "min" : sum_v, "max": seuil.value, "value":(seuil.value - sum_v), "color": m_color}
+                zones.index = zones.index + 1
+                zones = zones.sort_index()
+                prev_overrun = seuil.isOverrunThreshold
+            else:
+                #handle normal zone
+                if (seuil.isOverrunThreshold != prev_overrun):
+                    #zones.loc[stations[station_id], str(index)+"Normale_min"] = sum_v
+                    zones.loc[-1] = {"station" : station_id, "seuil" : "Normale", "isOverrunThreshold" : 0, "min": sum_v, "max": seuil.value , "value":(seuil.value - sum_v), "color": "#0000ff"}
+                    zones.index = zones.index + 1
+                    zones = zones.sort_index()
+                    sum_v = seuil.value
+                    prev_seuilname=seuil["name"]
+                    try:
+                        prev_color = seuil.htmlColor
+                    except : 
+                        prev_color = 'black'
+                    prev_overrun = seuil.isOverrunThreshold
+                else:
+                    #zones.loc[stations[station_id],str(str(index)+prev_seuilname+"_min")] = sum_v
+                    zones.loc[-1] = {"station" : station_id, "seuil" : prev_seuilname, "isOverrunThreshold" : seuil.isOverrunThreshold, "min": sum_v, "max": seuil.value , "value":(seuil.value - sum_v), "color":prev_color}
+                    zones.index = zones.index + 1
+                    zones = zones.sort_index()
+                    prev_seuilname=seuil["name"]
+                    try:
+                        prev_color = seuil.htmlColor
+                    except : 
+                        prev_color = 'black'
+                
+            sum_v = seuil.value
+        
+        #Add last entrie
+        #zones.loc[stations[station_id],str(str(index+1)+prev_seuilname+"_min")] = sum_v
+        zones.loc[-1] ={"station" : station_id, "seuil" : prev_seuilname, "isOverrunThreshold" : seuil.isOverrunThreshold, "min": sum_v , "max": (sum_v+0.2) ,"value":0.2, "color":prev_color} 
+        zones.index = zones.index + 1
+        zones = zones.sort_index()
+
+    return zones
+
+#@st.cache_data(ttl=3600)
 def m_getStation(station_id):
     
     url = "https://reyssouze.myliaq.fr/api/hydrologicalStation/{}".format(station_id)
