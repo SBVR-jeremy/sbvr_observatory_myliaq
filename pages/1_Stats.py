@@ -70,10 +70,10 @@ st.markdown("# Stats reférence")
 
 st.text("Q-X : Maximum annuels des débits instantanés (m3/s)")
 stations = dict()
-stations[3] = {'code': 'U4014010', 'name':"Montagnat",'Q2': 7.72, 'Q2_min': 6.82, 'Q2_max' : 8.68,'Q5': 11.1, 'Q5_min': 9.61, 'Q5_max' : 12.5, 'Q10': 13.3, 'Q10_min': 11.4, 'Q10_max' : 15.2, 'Q20': 15.4, 'Q20_min': 13.1, 'Q20_max' : 17.8, 'Q50': 18.2, 'Q50_min': 15.2, 'Q50_max' : 21.2 }
-stations[4] = {'code': 'U4014020', 'name':"Majornas",'Q2': 21.7, 'Q2_min': 19.9, 'Q2_max' : 23.6,'Q5': 27.4, 'Q5_min': 24.6, 'Q5_max' : 30.6, 'Q10': 31.2, 'Q10_min': 27.5, 'Q10_max' : 35.5, 'Q20': 34.8, 'Q20_min': 30.4, 'Q20_max' : 40.4, 'Q50': 39.4, 'Q50_min': 33.9, 'Q50_max' : 46.6 }
-stations[2] = {'code': 'U4054010', 'name':"Saint Julien sur R.",'Q2': 53.3, 'Q2_min': 47, 'Q2_max' : 61.2,'Q5': 70, 'Q5_min': 60.4, 'Q5_max' : 83.2, 'Q10': 81, 'Q10_min': 68.8, 'Q10_max' : 98.7, 'Q20': 91.6, 'Q20_min': 76.1, 'Q20_max' : 114, 'Q50': 105, 'Q50_min': 85.5, 'Q50_max' : 134 }
-stations[1] = {'code': 'U4300010', 'name':"Saone à Macon",'Q2': 1470, 'Q2_min': 1340, 'Q2_max' : 1600,'Q5': 1810, 'Q5_min': 1610, 'Q5_max' : 2040, 'Q10': 2030, 'Q10_min': 1780, 'Q10_max' : 2350, 'Q20': 2250, 'Q20_min': 1940, 'Q20_max' : 2640, 'Q50': 2530, 'Q50_min': 2140, 'Q50_max' : 3020 }
+stations[3] = {'code': 'U4014010', 'name':"Montagnat",'Q2': 7.72, 'Q2_min': 6.82, 'Q2_max' : 8.68,'Q5': 11.1, 'Q5_min': 9.61, 'Q5_max' : 12.5, 'Q10': 13.3, 'Q10_min': 11.4, 'Q10_max' : 15.2, 'Q20': 15.4, 'Q20_min': 13.1, 'Q20_max' : 17.8, 'Q50': 18.2, 'Q50_min': 15.2, 'Q50_max' : 21.2 , 'QMNA5' : 0.042, 'QMNA5_min' : 0.035, 'QMNA5_max' : 0.052 }
+stations[4] = {'code': 'U4014020', 'name':"Majornas",'Q2': 21.7, 'Q2_min': 19.9, 'Q2_max' : 23.6,'Q5': 27.4, 'Q5_min': 24.6, 'Q5_max' : 30.6, 'Q10': 31.2, 'Q10_min': 27.5, 'Q10_max' : 35.5, 'Q20': 34.8, 'Q20_min': 30.4, 'Q20_max' : 40.4, 'Q50': 39.4, 'Q50_min': 33.9, 'Q50_max' : 46.6 , 'QMNA5' : 0.185, 'QMNA5_min' : 0.153, 'QMNA5_max' : 0.223}
+stations[2] = {'code': 'U4054010', 'name':"Saint Julien sur R.",'Q2': 53.3, 'Q2_min': 47, 'Q2_max' : 61.2,'Q5': 70, 'Q5_min': 60.4, 'Q5_max' : 83.2, 'Q10': 81, 'Q10_min': 68.8, 'Q10_max' : 98.7, 'Q20': 91.6, 'Q20_min': 76.1, 'Q20_max' : 114, 'Q50': 105, 'Q50_min': 85.5, 'Q50_max' : 134 , 'QMNA5' : 0, 'QMNA5_min' : 0, 'QMNA5_max' : 0}
+stations[1] = {'code': 'U4300010', 'name':"Saone à Macon",'Q2': 1470, 'Q2_min': 1340, 'Q2_max' : 1600,'Q5': 1810, 'Q5_min': 1610, 'Q5_max' : 2040, 'Q10': 2030, 'Q10_min': 1780, 'Q10_max' : 2350, 'Q20': 2250, 'Q20_min': 1940, 'Q20_max' : 2640, 'Q50': 2530, 'Q50_min': 2140, 'Q50_max' : 3020, 'QMNA5' : 59.4, 'QMNA5_min' : 50.6, 'QMNA5_max' : 69.3}
 
 stations_filtered = dict()
 for station_id in stations:
@@ -81,7 +81,8 @@ for station_id in stations:
                                      ,'Q2' : str(stations[station_id]['Q2'])+"&#9;&#9;["+str(stations[station_id]['Q2_min'])+";"+str(stations[station_id]['Q2_max'])+"]"
                                      ,'Q5' : str(stations[station_id]['Q5'])+"&#9;&#9;["+str(stations[station_id]['Q5_min'])+";"+str(stations[station_id]['Q5_max'])+"]"
                                      ,'Q10' : str(stations[station_id]['Q10'])+"&#9;&#9;["+str(stations[station_id]['Q10_min'])+";"+str(stations[station_id]['Q10_max'])+"]"
-                                     ,'Q20' : str(stations[station_id]['Q20'])+"&#9;&#9;["+str(stations[station_id]['Q20_min'])+";"+str(stations[station_id]['Q20_max'])+"]" }
+                                     ,'Q20' : str(stations[station_id]['Q20'])+"&#9;&#9;["+str(stations[station_id]['Q20_min'])+";"+str(stations[station_id]['Q20_max'])+"]"
+                                    ,'QMNA5' : str(stations[station_id]['QMNA5'])+"&#9;&#9;["+str(stations[station_id]['QMNA5_min'])+";"+str(stations[station_id]['QMNA5_max'])+"]" }
 
 
 df = pd.DataFrame(stations_filtered)
