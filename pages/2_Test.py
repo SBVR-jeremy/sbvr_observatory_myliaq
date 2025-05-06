@@ -108,10 +108,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
-options = webdriver.ChromeOptions()
-options.headless = True
+from selenium.webdriver.chrome.options import Options  
 
-driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverManager().install()))
+chrome_options = Options()  
+chrome_options.add_argument("--headless")  
+
+driver = webdriver.Chrome(options=chrome_options)
+
 driver.implicitly_wait(10)
 
 # Navigate to the desired web page
