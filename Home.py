@@ -193,7 +193,7 @@ def dashboard():
     #st.session_state.hubeau_checkbox_value = st.sidebar.checkbox("Afficher les données hubeau", value=st.session_state.hubeau_checkbox_value)
 
     # # get all hydrological stations
-    # url = "https://reyssouze.myliaq.fr/api//hydrologicalStation/dataTypes"
+    # url = "https://reyssouze.myliaq.fr/api/hydrologicalStation/dataTypes"
     # headers = {
     #     "Content-Type" : "application/json; charset=utf-8",
     #     "Authorization" : 'Bearer '+st.secrets["myliaq"]["api_key"]

@@ -100,12 +100,42 @@ from tools.queries import *
 # image as base64 string
 #base64_string = driver.get_screenshot_as_base64()
 
-
-
+from streamlit.components.v1 import html
+import streamlit.components.v1 as components
 from PIL import Image
 
-imgUrl = 'MeteoCeyzeriat.png'
-image = Image.open(imgUrl)
-image.show()
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+
+options = webdriver.ChromeOptions()
+options.headless = True
+
+driver = webdriver.Chrome(options=options, service=ChromeService(ChromeDriverManager().install()))
+driver.implicitly_wait(10)
+
+# Navigate to the desired web page
+#meteoblue Bourg
+url = ' https://www.meteoblue.com/en/weather/widget/daily/bourg-en-bresse_france_3031009?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light'  # Replace with your desired URL
+driver.get(url)
+driver.get_screenshot_as_file('./static/PreviMeteoBlueBourg.png')
+
+#meteoblue Montrevel
+url = 'https://www.meteoblue.com/en/weather/widget/daily/montrevel-en-bresse_france_2992050?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light'
+driver.get(url)
+driver.get_screenshot_as_file('./static/PreviMeteoBlueMontrevel.png')
+
+#meteoblue Pont de vaux
+url = 'https://www.meteoblue.com/en/weather/widget/daily/pont-de-vaux_france_2986227?geoloc=fixed&days=7&tempunit=CELSIUS&windunit=KILOMETER_PER_HOUR&precipunit=MILLIMETER&coloured=coloured&pictoicon=1&maxtemperature=1&mintemperature=1&windspeed=1&windgust=0&winddirection=0&uv=0&humidity=0&precipitation=1&precipitationprobability=1&spot=1&pressure=0&layout=light'
+driver.get(url)
+driver.get_screenshot_as_file('./static/PreviMeteoBluePontDeVaux.png')
+                
+driver.close()
+
+## Full screenshot
+#S = lambda x: driver.execute_script('return document.body.parentNode.scroll' + x)
+#driver.set_window_size(S('Width'), S('Height'))
+#driver.find_element(By.XPATH, '/html/body').screenshot('./static/report_full.png')
+
 
 
