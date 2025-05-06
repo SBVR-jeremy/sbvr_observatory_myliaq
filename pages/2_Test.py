@@ -100,15 +100,12 @@ from tools.queries import *
 # image as base64 string
 #base64_string = driver.get_screenshot_as_base64()
 
-faviconPath = "static/images/cropped-favicon-32x32.jpg"
 
-st.set_page_config(layout="wide", page_icon=faviconPath, page_title="SBVR Observatoire - Test" ,initial_sidebar_state='collapsed')
- 
-hide_rainbow_bar()
-hide_streamlit_credits()
 
-#st.image(bytes)
-st.image('MeteoCeyzeriat.png')
+from PIL import Image
 
+imgUrl = 'MeteoCeyzeriat.png'
+image = Image.open(imgUrl)
+image.show()
 
 
