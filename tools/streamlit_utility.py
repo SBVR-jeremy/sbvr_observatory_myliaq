@@ -288,11 +288,11 @@ def showCumulatedGraphs(type_value, m_title, m_loading_title, expanded=False):
                 url = "http://127.0.0.1:1111/api/graphCumulatedChronique"
                 data = requests.post(url, json=json.dumps(payload))
                 #print("Response 3_API")
-                #st.image(data.content)
+                st.image(data.content)
                 
                 #data = data.json()
                 #display json
-                st.write(data)
+                #st.write(data)
             
                 #st.container( border=False).vega_lite_chart(data=data, use_container_width=True)
             except Exception as e:

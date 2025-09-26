@@ -55,7 +55,21 @@ from jinja2 import Environment, PackageLoader, select_autoescape, FileSystemLoad
 from pdfkit.api import configuration
 
 #This need to be changed on production !!!
-wkhtml_path = pdfkit.configuration(wkhtmltopdf = "C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe")  #by using configuration you can add path value.
+import toml
+
+#Load secret file
+try:
+    secrets = toml.load("./.streamlit/secrets.toml")
+    headers = {
+        "Content-Type" : "application/json; charset=utf-8",
+        "Authorization" : 'Bearer '+secrets["myliaq"]["api_key"]
+    }
+    wkhtml_path = pdfkit.configuration(wkhtmltopdf = secrets["pdfkit"]["wkhtml"])  #by using configuration you can add path value.
+
+except Exception as e:
+    print("Loading secret file failed : 2_Rapport.py l:62")
+    print(e)
+    wkhtml_path = pdfkit.configuration(wkhtmltopdf = "")  #by using configuration you can add path value.
 
 #import locale
 #locale.setlocale(locale.LC_TIME, "fr_FR")
