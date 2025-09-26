@@ -59,7 +59,7 @@ def m_getJSONFromMyliaqAPI(url):
     #print("Status Code", response.status_code)
     #print("JSON Response ", response.json())
 
-    #stations = pd.read_json(io.StringIO(response.text.decode('utf-8'))))
+    #stations = pd.read_json(io.StringIO(response.text)))
     #print(stations)
     #print(response.json())
     
@@ -106,7 +106,7 @@ def m_getAllSamplesAnalyse(station_id, type_value_id, start_date=None, end_date=
     #print("Status Code", response.status_code)
     if response.status_code == 200:
          #print("JSON Response ", response.json())
-        samples = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+        samples = pd.read_json(io.StringIO(response.text))
         #print(samples.shape[0]) #[1755079200000, 0, 1, 2, 4]
         #print(samples.shape[1])
 
@@ -200,7 +200,7 @@ def m_getAllPluvioMeasures(station_id, type_value_id, start_date=None, end_date=
         #print("Status Code", response.status_code)
         if response.status_code == 200:
             #print("JSON Response ", response.json())
-            samples = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+            samples = pd.read_json(io.StringIO(response.text))
             #print(samples.shape[0]) #[1755079200000, 0, 1, 2, 4]
             #print(samples.shape[1])
 
@@ -235,7 +235,7 @@ def m_getAllSeuils(station_id, type_value_id=None):
     #print("Status Code", response.status_code)
     #print("JSON Response ", response.json())
 
-    seuils = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+    seuils = pd.read_json(io.StringIO(response.text))
     #print(seuils)
     if type_value_id is not None:
         #print("filter dataType={}".format(type_value_id))
@@ -372,7 +372,7 @@ def m_getCommunications():
     #print("Status Code", response.status_code)
     #print("JSON Response ", response.json())
 
-    #stations = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+    #stations = pd.read_json(io.StringIO(response.text))
     #print(stations)
     #print(response.json())
     
@@ -450,7 +450,7 @@ def m_getMapSituation(simulation_date=None):
         #print("Status Code", response.status_code)
         #print("JSON Response ", response.json())
 
-        situations_dates = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+        situations_dates = pd.read_json(io.StringIO(response.text))
         try:
             situations_dates = situations_dates[0]
         except KeyError:
@@ -491,7 +491,7 @@ def m_getMapSituation(simulation_date=None):
         if response.status_code == 200:
             #print("SECOND JSON Response ", response.json())
             #situations = pd.read_json(response.text)
-            situations = pd.read_json(io.StringIO(response.text.decode('utf-8')))
+            situations = pd.read_json(io.StringIO(response.text))
             return situations
         else:
             print("Error while retreiving map_situation") 
