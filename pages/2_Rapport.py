@@ -306,51 +306,7 @@ def reset_submitted():
     st.session_state.submitted = False
 
 def record_submitted():
-    display_form = False
-    st.session_state.submitted = True
-    data  = dict()
-    data["type_bsh"] = type_bsh
-    data["date_donnees_val"] = date_donnees_val
-    data["date_publication_val"] = date_publication_val
-    data["date_donnees_range_start"] = date_donnees_range_start
-    data["date_donnees_range_end"] = date_donnees_range_end
-    data["synthese_val"] = synthese_val
-    data["precipitations_val"] = precipitations_val
-    data["synthese_hydro_val"] = synthese_hydro_val
-    data["hauteur_eau_txt"] = hauteur_eau_txt
-    data["showCouranto"] = showCouranto
-    data["couranto_txt"] = couranto_txt
-    data["showONDE"] = showONDE
-    data["onde_txt"] = onde_txt
-    data["temperature_txt"] = temperature_txt
-    data["temperature_data"] = temperature_data
-    data["showEauxSout"] = showEauxSout
-    data["synthese_sout_val"] = synthese_sout_txt
-    data["communications_externes"] = communications_externes
-    #data[""] = 
-    #data[""] = 
-
-    try:
-        with st.spinner("Wait for it...", show_time=True):
-            generate_report(data)
-        st.success("Done!")
-
-        output_bulletin = "./static/bulletin/BMSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m"))
-
-        if type_bsh == "Hebdomadaire":
-            output_bulletin =  "./static/bulletin/BHSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m-%d"))
-
-        with open(output_bulletin, "rb") as pdffile:
-            st.download_button(
-                    label="Download PDF",
-                    data=pdffile,
-                    file_name=output_bulletin,
-                    mime="application/pdf",
-                    icon=":material/download:",
-                )
-
-    except Exception as e:
-        st.warning(e)
+    return True
             
 def check_report_image_exists(filename,url_hint,show_upload_form=True, img_width=200):
     try:
@@ -583,6 +539,52 @@ if display_form and not st.session_state.submitted :
             
             submitted = st.form_submit_button("Generer le PDF", on_click=record_submitted)
 
+            if submitted:
+                display_form = False
+                st.session_state.submitted = True
+                data  = dict()
+                data["type_bsh"] = type_bsh
+                data["date_donnees_val"] = date_donnees_val
+                data["date_publication_val"] = date_publication_val
+                data["date_donnees_range_start"] = date_donnees_range_start
+                data["date_donnees_range_end"] = date_donnees_range_end
+                data["synthese_val"] = synthese_val
+                data["precipitations_val"] = precipitations_val
+                data["synthese_hydro_val"] = synthese_hydro_val
+                data["hauteur_eau_txt"] = hauteur_eau_txt
+                data["showCouranto"] = showCouranto
+                data["couranto_txt"] = couranto_txt
+                data["showONDE"] = showONDE
+                data["onde_txt"] = onde_txt
+                data["temperature_txt"] = temperature_txt
+                data["temperature_data"] = temperature_data
+                data["showEauxSout"] = showEauxSout
+                data["synthese_sout_val"] = synthese_sout_txt
+                data["communications_externes"] = communications_externes
+                #data[""] = 
+                #data[""] = 
+
+                try:
+                    with st.spinner("Wait for it...", show_time=True):
+                        generate_report(data)
+                    st.success("Done!")
+
+                    output_bulletin = "./static/bulletin/BMSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m"))
+
+                    if type_bsh == "Hebdomadaire":
+                        output_bulletin =  "./static/bulletin/BHSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m-%d"))
+
+                    with open(output_bulletin, "rb") as pdffile:
+                        st.download_button(
+                                label="Download PDF",
+                                data=pdffile,
+                                file_name=output_bulletin,
+                                mime="application/pdf",
+                                icon=":material/download:",
+                            )
+
+                except Exception as e:
+                    st.warning(e)
 
 
 # #Test affichage images
