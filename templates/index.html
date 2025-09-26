@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Graphical API for myliaq</title>
+    <meta charset="utf-8">
+
+
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap-theme.min.css">
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js">script></script>
+
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <!-- Import the Vega-Embed library -->
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+
+    <!-- Vega Tooltip -->
+    <link rel="stlesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/vega-tooltip@0.16.0/vega-tooltip.scss">
+    <script src="https://cdn.jsdelivr.net/npm/vega-tooltip@0.16.0/build/vega-tooltip.min.js"></script>
+
+    <style>hr, h3 {padding-bottom: 20px;}canvas {background-color: "#fffff;"}</style>
+    <style>
+    div.waterfall {
+        width: 1200px;
+        height: 300px;
+        overflow-x: auto;
+        overflow-y: auto;
+    }
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+
+      <div class="header">
+        <ul class="nav nav-pills pull-right">
+          <li class="active">
+          <li><a href="https://altair-viz.github.io/index.html">Altair</a></li>
+          <li><a href="https://vega.github.io/vega-lite/">Vega-Lite</a></li>
+          <li><a href="http://flask.pocoo.org/">Flask</a></li>
+        </ul>
+        <h1 class="text-muted">Graphical API for myliaq Demo Home Page</h1>
+      </div>
+
+      <div class="charts text-center">
+
+        <div class="row">
+          <h2>Graph Analyse Meteo Annuel</h2>
+          <code>"/api/graphAnalyseAnnuelleMeteo?station_id=21&year=2024&show_title=true"</code></br>
+          <div id="GraphAnalyseAnnuelleMeteo"></div>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph Analyse Meteo</h2>
+          <code>"/api/graphAnalyseMeteo?station_id=1&date_start=2025-09-01&date_end=2025-09-30&show_title=true"</code></br>
+          <div id="GraphAnalyseMeteo"></div>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph ONDES</h2>
+          <code>"/api/mapSituation?simulation_date=2025-07-01"</code></br>
+          <div id="GraphOndes"></div>
+          <img id="GraphOndesImp" src="/api/mapSituation" width="400"></img>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph Alerte</h2>
+          <code>"/api/graphAlerte?station_id=STATION_ID"</code></br>
+          <div id="GraphAlerte"></div>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph Update</h2>
+          <code>"/api/graphUpdate?station_id=STATION_ID&type_value_id=TYPE_VALUE_ID&show_title=true"</code></br>
+          <div id="GraphUpdate"></div>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph Chronique</h2>
+          <code>"/api/graphChronique?station_id=STATION_ID&type_value_id=TYPE_VALUE_ID&show_title=true"</code></br>
+          <div id="GraphChronique"></div>
+        </div><hr>
+
+        <div class="row">
+          <h2>Graph Cumulated as Image</h2>
+          <code>"/api/graphCumulatedChronique?stations=[STATION_ID,STATION_ID,STATIONS_ID,...]&type_value_id=TYPE_VALUE_ID&date_start=2025-09-15&date_end=2025-09-22&output=png" - method:POST / add payload</code></br>
+          <img id="GraphCumulatedChronique" src="/api/graphCumulatedChronique?stations=[11,5,54]&type_value_id=7&date_start=2025-09-15&date_end=2025-09-22&output=png" width="400"></img>
+        </div><hr>
+
+        <!-- Placeholder for the tooltip -->
+        <div id="vis-tooltip" class="vg-tooltip"></div>
+      </div>
+    </div>
+
+    <!-- Render Charts -->
+    <script type="text/javascript">
+      function parse(url, div) {
+        var opt = {
+          mode: "vega-lite",
+          renderer: "svg",
+          actions: {export: true, source: false, editor: false}
+        };
+
+        vegaEmbed("#"+div, url, opt, function(error, result) {
+          // result.view is the Vega View, url is the original Vega-Lite specification
+          vegaTooltip.vegaLite(result.view, url);
+        });
+      }
+      //parse("/api/mapSituation", "GraphOndes")
+      parse("/api/graphAlerte?station_id=54", "GraphAlerte")
+      parse("/api/graphUpdate?station_id=54&type_value_id=4&show_title=true", "GraphUpdate")
+      parse("/api/graphChronique?station_id=54&type_value_id=4", "GraphChronique")
+      //parse("/api/graphCumulatedChronique", "GraphCumulatedChronique")
+      parse("/api/graphAnalyseMeteo?station_id=21&date_start=2025-09-01&date_end=2025-09-30&show_title=true", "GraphAnalyseMeteo")
+
+      parse("/api/graphAnalyseMeteo?station_id=21&date_start=2025-09-01&date_end=2025-09-30&show_title=true", "GraphAnalyseMeteo")
+      parse("/api/graphAnalyseAnnuelleMeteo?station_id=21&year=2024&show_title=true","GraphAnalyseAnnuelleMeteo")
+    
+   
+    </script>
+
+  </body>
+</html>
