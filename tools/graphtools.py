@@ -572,15 +572,15 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         for idx, row in samples_pluie_month.iterrows():
             a = stats_samples_pluie_months[stats_samples_pluie_months["month"] == row["month"]]["ymean"]
             #print(a)
-            samples_pluie_month.at[idx, "mean_months"] = float(a)
+            samples_pluie_month.at[idx, "mean_months"] = float(a.iloc[0])
 
-            evol_percent = round(( row["ysum"] / float(a) * 100.0 ) - 100,2)
+            evol_percent = round(( row["ysum"] / float(a.iloc[0]) * 100.0 ) - 100,2)
             if evol_percent >=0:
                 samples_pluie_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
             else:
                 samples_pluie_month.at[idx, "evolution_percent"] = " "+str(evol_percent)+"%"
 
-            evol_value = round(row["ysum"] - float(a) ,2)
+            evol_value = round(row["ysum"] - float(a.iloc[0]) ,2)
             if evol_value >=0:
                 samples_pluie_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"mm"
             else:
@@ -627,14 +627,14 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
             #print("Normale mensuelle : {}".format(str(row["month"])))
             a = stats_samples_temp_months[stats_samples_temp_months["month"] == row["month"]]["ymean"]
             #print(a)
-            samples_temp_month.at[idx, "mean_months"] = float(a)
-            evol_percent = round(( row["ymean"] / float(a) * 100.0 ) - 100,2)
+            samples_temp_month.at[idx, "mean_months"] = float(a.iloc[0])
+            evol_percent = round(( row["ymean"] / float(a.iloc[0]) * 100.0 ) - 100,2)
             if evol_percent >=0:
                 samples_temp_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
             else:
                 samples_temp_month.at[idx, "evolution_percent"] = " -"+str(evol_percent)+"%"
 
-            evol_value = round(row["ymean"] - float(a) ,2)
+            evol_value = round(row["ymean"] - float(a.iloc[0]) ,2)
             if evol_value >=0:
                 samples_temp_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"°C"
             else:
@@ -756,13 +756,13 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         for idx, row in samples_pluie_month.iterrows():
             a = stats_samples_pluie_months[stats_samples_pluie_months["month"] == row["month"]]["ymean"]
             #print(a)
-            samples_pluie_month.at[idx, "mean_months"] = float(a)
+            samples_pluie_month.at[idx, "mean_months"] = float(a.iloc[0])
 
-            evol_percent = round(( row["ysum"] / float(a) * 100.0 ) - 100,2)
+            evol_percent = round(( row["ysum"] / float(a.iloc[0]) * 100.0 ) - 100,2)
             samples_pluie_month.at[idx, "evolution_percent"] = evol_percent 
 
 
-            evol_value = round(row["ysum"] - float(a) ,2)
+            evol_value = round(row["ysum"] - float(a.iloc[0]) ,2)
             samples_pluie_month.at[idx, "evolution_value"] = evol_value
             
         # #samples_pluie_month["mean_months"] = samples_pluie_month.apply(lambda x: stats_samples_pluie_months["ymean"].filter(stats_samples_pluie_months["month"] == x.index.month))
@@ -812,12 +812,12 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
             #print("Normale mensuelle : {}".format(str(row["month"])))
             a = stats_samples_temp_months[stats_samples_temp_months["month"] == row["month"]]["ymean"]
             #print(a)
-            samples_temp_month.at[idx, "mean_months"] = float(a)
+            samples_temp_month.at[idx, "mean_months"] = float(a.iloc[0])
 
-            evol_percent = round(( row["ymean"] / float(a) * 100.0 ) - 100,2)
+            evol_percent = round(( row["ymean"] / float(a.iloc[0]) * 100.0 ) - 100,2)
             samples_temp_month.at[idx, "evolution_percent"]  = evol_percent
 
-            evol_value = round(row["ymean"] - float(a) ,2)
+            evol_value = round(row["ymean"] - float(a.iloc[0]) ,2)
             samples_temp_month.at[idx, "evolution_value"] = evol_value
             
         
