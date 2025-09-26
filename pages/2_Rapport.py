@@ -30,6 +30,7 @@ from yaml.loader import SafeLoader
 
 import pandas as pd
 import numpy as np
+import io
 
 from datetime import datetime, date, timezone
 from dateutil.relativedelta import *
@@ -524,7 +525,7 @@ if display_form and not st.session_state.submitted :
                 url = "http://127.0.0.1:1111/api/statsChronique?stations=[11,5,54]&type_value_id=7&type_value_id=7&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")
                 #print (url)
                 stats_temp = requests.get(url).json()
-                pd_temperature_data = pd.read_json(stats_temp)
+                pd_temperature_data = pd.read_json(io.StringIO(stats_temp.decode('utf-8')))
                 stations = getStations()
 
                 pd_temperature_data["station_name"] = pd_temperature_data.apply(lambda x: m_extractStation(stations, x["station_id"])['name'], axis=1)
