@@ -569,22 +569,25 @@ if display_form and not st.session_state.submitted :
                         generate_report(data)
                     st.success("Done!")
 
-                    output_bulletin = "./static/bulletin/BMSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m"))
-
-                    if type_bsh == "Hebdomadaire":
-                        output_bulletin =  "./static/bulletin/BHSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m-%d"))
-
-                    with open(output_bulletin, "rb") as pdffile:
-                        st.download_button(
-                                label="Download PDF",
-                                data=pdffile,
-                                file_name=output_bulletin,
-                                mime="application/pdf",
-                                icon=":material/download:",
-                            )
+                    
 
                 except Exception as e:
                     st.warning(e)
+
+        if submitted:
+            output_bulletin = "./static/bulletin/BMSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m"))
+
+            if type_bsh == "Hebdomadaire":
+                output_bulletin =  "./static/bulletin/BHSH-SBVR-{}.pdf".format(date_publication_val.strftime("%Y-%m-%d"))
+
+            with open(output_bulletin, "rb") as pdffile:
+                st.download_button(
+                        label="Download PDF",
+                        data=pdffile,
+                        file_name=output_bulletin,
+                        mime="application/pdf",
+                        icon=":material/download:",
+                    )
 
 
 # #Test affichage images
