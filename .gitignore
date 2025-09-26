@@ -13,6 +13,7 @@ htmlcov/
 temp/
 static/bulletin/*.pdf
 static/bulletin/Converted_files/
+static/temp/
 
 dist/
 build/
