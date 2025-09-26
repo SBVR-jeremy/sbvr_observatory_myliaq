@@ -11,6 +11,8 @@ instance/
 htmlcov/
 
 temp/
+static/bulletin/*.pdf
+static/bulletin/Converted_files/
 
 dist/
 build/

@@ -16,36 +16,14 @@ __status__ = "Dev"
 
 import streamlit as st
 import streamlit_authenticator as stauth
-import yaml #login config
-from yaml.loader import SafeLoader
-from streamlit_extras.no_default_selectbox import selectbox
-from streamlit_extras.chart_container import chart_container
 from streamlit_extras.app_logo import add_logo
 
 import pandas as pd
-import numpy as np
-import datetime
-
-import plotly.express as px
-import plotly.graph_objects as go
-import plotly.figure_factory as ff
-
-import folium
-from streamlit_folium import st_folium, folium_static
-from folium.plugins import HeatMap, AntPath
-import pickle  #to load a saved modelimport base64  #to open .gif files in streamlit app
-import psycopg2
-from psycopg2.extras import NamedTupleCursor
-import matplotlib.pyplot as plt
-import base64
-
-import plotly
-import kaleido
-import plotly 
-import json
-import altair as alt
+#import numpy as np
+#import datetime
 
 from tools.utility import *
+from tools.streamlit_utility import *
 from tools.queries import *
 
 # ---------------------------------------------------------------------------------------------
@@ -96,18 +74,16 @@ stations[11] = {'code': 'U4014010', 'name':"Viriat",'Q2': None, 'Q2_min':None , 
 stations[5] = {'code': 'U4014010', 'name':"Baudières",'Q2': None, 'Q2_min':None , 'Q2_max' : None ,'Q5': None, 'Q5_min': None, 'Q5_max' : None, 'Q10': None, 'Q10_min': None, 'Q10_max' :None, 'Q20': None, 'Q20_min': None, 'Q20_max' : None, 'Q50': None, 'Q50_min': None, 'Q50_max' : None }
 stations[54] = {'code': 'U4014010', 'name':"Cras",'Q2': None, 'Q2_min':None , 'Q2_max' : None ,'Q5': None, 'Q5_min': None, 'Q5_max' : None, 'Q10': None, 'Q10_min': None, 'Q10_max' :None, 'Q20': None, 'Q20_min': None, 'Q20_max' : None, 'Q50': None, 'Q50_min': None, 'Q50_max' : None }
 
-for idx, type_value in enumerate(type_values):
-    #st.dataframe(samples)
-    if type_value == "m":
-        st.header("Hauteur d'eau")
-    elif type_value == "mm/h":
-        st.header(":new: Vitesse de montée des eaux (moy 3h)")
-    elif type_value == "°C":
-        st.header("Température")
-    elif type_value == "V":
-        st.header("Batterie")
-    elif type_value == "m3/s":
-        st.header("Débit")
+
+hydro_data_types = pd.DataFrame(getDataTypeHydro())
+hydro_data_types = hydro_data_types.query('(id >= 0) & (displayData.isnull() | displayData==True)')
+hydro_data_types.sort_values(by=['order'],inplace=True)
+#print(hydro_data_types)
+
+for idx, dt in hydro_data_types.iterrows():
+    m_title = ":straight_ruler: {}".format(dt["label"])
+    m_loading_title = "Chargement {}...".format(dt["label"])
+    st.title(m_title)
 
     for station_id in stations:
         # print station
@@ -115,10 +91,10 @@ for idx, type_value in enumerate(type_values):
         st.text(station['code'][:8]+" - "+stations[station_id]['name'])
         #st.link_button(station['code'][:8]+" - "+station['name'], "https://www.hydroportail.developpement-durable.gouv.fr/sitehydro/"+station['code'][:8]+"/synthese/regime/hautes-eaux")
         #recup des seuils
-        seuils = m_getAllSeuils(station_id,type_value)
+        seuils = m_getAllSeuils(station_id,dt["id"])
         if seuils.shape[0] > 0:
             for index, seuil in seuils.iterrows():
-                st.markdown("- "+seuil['name']+" : "+str(seuil['value'])+" "+type_value)
+                st.markdown("- "+seuil['name']+" : "+str(seuil['value'])+" "+str(dt["id"]))
                 #st.text(seuil)
 
 

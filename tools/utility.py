@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""utility.py: This file contains functions shared aver the application"""
+"""utility.py: This file contains functions shared over the application"""
 
 __author__ = "Jeremy Bluteau"
 __copyright__ = "Copyright 2023, SBVR Observatory"
@@ -14,8 +14,6 @@ __status__ = "Dev"
 # ---------------------------------------------------------------------------------------------
 # IMPORT
 # ---------------------------------------------------------------------------------------------
-import streamlit as st
-
 import pandas as pd
 import numpy as np
 import datetime
@@ -32,6 +30,17 @@ from dateutil import tz
 # ---------------------------------------------------------------------------------------------
 # FUNCTIONS
 # ---------------------------------------------------------------------------------------------
+def beginning_of_month(today: date | None = None) -> date:
+    today = today or date.today()
+    return date(today.year, today.month, 1)
+
+def end_of_month(today: date | None = None) -> date:
+    today = today or date.today()
+    beginning_of_current_month = beginning_of_month(today) # Step (1)
+    beginning_of_next_month = beginning_of_month(          # Step (3)
+        beginning_of_current_month + date.resolution * 31  # Step (2)
+    )
+    return beginning_of_next_month - date.resolution
 
 def utc2local(utc):
     #Use this function to display datetime as local time
@@ -41,35 +50,3 @@ def utc2local(utc):
         print(e)
         return utc
 
-def hide_rainbow_bar():
-    hide_decoration_bar_style = '''
-    <style>
-        header {visibility: hidden;}
-        .css-z5fcl4 {
-                    padding-top: 1rem;
-                    padding-bottom: 0rem;
-                    padding-left: 5rem;
-                    padding-right: 5rem;
-                }
-        [data-testid="stSidebarNav"] {
-            padding-top: 200px !important;
-        }
-        
-    </style>
-    '''
-    st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
-
-def hide_streamlit_credits():
-    hide_default_format = """
-       <style>
-       #MainMenu {visibility: hidden; }
-       footer {visibility: hidden;}
-       </style>
-       """
-    st.markdown(hide_default_format, unsafe_allow_html=True)
-
-
-DEFAULT = ' --- '
-def selectbox_with_default(text, values, default=DEFAULT, sidebar=False, index=0):
-    func = st.sidebar.selectbox if sidebar else st.selectbox
-    return func(text, np.insert(np.array(values, object), index, default))
