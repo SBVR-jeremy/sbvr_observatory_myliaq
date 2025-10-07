@@ -132,6 +132,7 @@ def showAlerteGraphs(expanded=False):
             stations[11] = "Viriat"
             stations[5] = "Baudières"
             stations[54] = "Cras"
+            stations[58] = "Pont de Vaux"
             cols = st.columns((len(stations)))
             idx = 0
             for station_id in stations:
@@ -167,10 +168,16 @@ def showNiveauxGraphs(type_value, m_title, m_loading_title, expanded=False):
             stations[11] = "Viriat"
             stations[5] = "Baudières"
             stations[54] = "Cras"
-            cols = st.columns((len(stations)))
+            stations[58] = "Pont de Vaux"
+            #cols = st.columns((len(stations)%4))
             idx = 0
+            nbcols = 4 if len(stations)>=4 else len(stations)
+
             for station_id in stations:
-                with cols[idx]:
+                if (idx % 4 == 0):
+                    cols = st.columns(nbcols)
+
+                with cols[idx %4 ]:
                     stationsFull = getStations()
                     my_station = m_extractStation(stationsFull,station_id)
                     station_name = my_station['name'] if my_station is not None else "Station not Found"
@@ -273,7 +280,8 @@ def showCumulatedGraphs(type_value, m_title, m_loading_title, expanded=False):
             stations[11] = {"title": "Viriat", "color" : '#4ECB8D'}
             stations[5] = {"title": "Baudières", "color" : '#FF9D3A'}
             stations[54] = {"title": "Cras", "color" : '#F9E858'}
-            
+            stations[58] = {"title" : "Pont de Vaux", "color" : "#00EEFF"}
+
             try:        
                 payload = {
                     "stations": stations,

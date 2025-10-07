@@ -237,12 +237,13 @@ def m_getAllSeuils(station_id, type_value_id=None):
 
     seuils = pd.read_json(io.StringIO(response.text))
     #print(seuils)
-    if type_value_id is not None:
-        #print("filter dataType={}".format(type_value_id))
-        seuils.query("dataType=={}".format(type_value_id), inplace=True)
-
+    
     if seuils.shape[0] == 0:
         return pd.DataFrame(columns = ['id','code','name','value','color','isOverrunThreshold','dataType','htmlColor'])
+
+    if type_value_id is not None:
+        print("filter dataType={}".format(type_value_id))
+        seuils.query("dataType=={}".format(type_value_id), inplace=True)
 
     return seuils
     
