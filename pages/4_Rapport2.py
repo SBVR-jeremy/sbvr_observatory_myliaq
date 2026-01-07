@@ -36,9 +36,9 @@ from datetime import datetime, date, timezone
 from dateutil.relativedelta import *
 
 
-from spire.doc import *
-from spire.doc.common import *
-from spire.doc import Document as sp_Document
+#from spire.doc import *
+#from spire.doc.common import *
+#from spire.doc import Document as sp_Document
 
 #This need to be changed on production !!!
 import toml
