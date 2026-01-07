@@ -47,6 +47,8 @@ add_logo('static/images/small-logo-carre-quadri-SBVR.jpg')
 st.markdown("# Stats reférence")
 
 st.text("Q-X : Maximum annuels des débits instantanés (m3/s)")
+st.text("QM-N : Debit moyen mensuel minimal (m3/s)")
+
 stations = dict()
 stations[3] = {'code': 'U4014010', 'name':"Montagnat",'Q2': 7.72, 'Q2_min': 6.82, 'Q2_max' : 8.68,'Q5': 11.1, 'Q5_min': 9.61, 'Q5_max' : 12.5, 'Q10': 13.3, 'Q10_min': 11.4, 'Q10_max' : 15.2, 'Q20': 15.4, 'Q20_min': 13.1, 'Q20_max' : 17.8, 'Q50': 18.2, 'Q50_min': 15.2, 'Q50_max' : 21.2 , 'QMNA5' : 0.042, 'QMNA5_min' : 0.035, 'QMNA5_max' : 0.052 }
 stations[4] = {'code': 'U4014020', 'name':"Majornas",'Q2': 21.7, 'Q2_min': 19.9, 'Q2_max' : 23.6,'Q5': 27.4, 'Q5_min': 24.6, 'Q5_max' : 30.6, 'Q10': 31.2, 'Q10_min': 27.5, 'Q10_max' : 35.5, 'Q20': 34.8, 'Q20_min': 30.4, 'Q20_max' : 40.4, 'Q50': 39.4, 'Q50_min': 33.9, 'Q50_max' : 46.6 , 'QMNA5' : 0.185, 'QMNA5_min' : 0.153, 'QMNA5_max' : 0.223}

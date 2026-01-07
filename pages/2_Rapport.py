@@ -448,14 +448,14 @@ if display_form and not st.session_state.submitted :
                 synthese_hydro_val = st_quill(value=synthese_hydro_text, placeholder='Texte hydrologie', html=True, toolbar=None, history=True, preserve_whitespace=True, readonly=False, key='hydro_txt')
                 
                 #graph cumulé hauteur eau
-                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[4,3,2,11,5,54]&type_value_id=4&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
+                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[4,3,2,11,5,54,58]&type_value_id=4&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
                 print (url)
                 data = requests.get(url)
                 st.image(data.content, width=500)
                 
                 
                 #graph cumulé debit eau
-                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[4,3,2,11,5,54]&type_value_id=5&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
+                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[4,3,2,11,5,54,58]&type_value_id=5&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
                 print (url)
                 data = requests.get(url)
                 st.image(data.content, width=500)
@@ -470,7 +470,7 @@ if display_form and not st.session_state.submitted :
                 
 
                 #graph cumulé temperature
-                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[11,5,54]&type_value_id=7&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
+                url = "http://127.0.0.1:1111/api/graphCumulatedChronique?stations=[11,5,54,58]&type_value_id=7&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")+"&output=png"
                 print (url)
                 data = requests.get(url)
                 st.image(data.content, width=500)
@@ -478,7 +478,7 @@ if display_form and not st.session_state.submitted :
                 #compute temperature table
                 temperature_data = {}
 
-                url = "http://127.0.0.1:1111/api/statsChronique?stations=[11,5,54]&type_value_id=7&type_value_id=7&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")
+                url = "http://127.0.0.1:1111/api/statsChronique?stations=[11,5,54,58]&type_value_id=7&type_value_id=7&date_start="+date_donnees_range_start.strftime("%Y-%m-%d")+"&date_end="+date_donnees_range_end.strftime("%Y-%m-%d")
                 #print (url)
                 stats_temp = requests.get(url).json()
                 pd_temperature_data = pd.read_json(io.StringIO(stats_temp))
@@ -529,7 +529,10 @@ if display_form and not st.session_state.submitted :
                 m_datedebut =  int(round(datetime_donnees_range_start.timestamp()*1000.0))  #timestamp in milliseconds
                 m_datefin = int(round(datetime_donnees_range_end.timestamp()*1000.0))  #timestamp in milliseconds
                 communications_externes = list(filter(lambda x: x['dateDebut'] >= m_datedebut, communications_externes))
-                communications_externes = list(filter(lambda x: x['dateFin'] <= m_datefin, communications_externes))
+                try:
+                    communications_externes = list(filter(lambda x: x['dateFin'] <= m_datefin, communications_externes))
+                except:
+                    pass
                 st.dataframe(communications_externes)
                 # #display json
                 # for line in communications_externes:

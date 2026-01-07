@@ -92,6 +92,9 @@ def getStatsChroniques():
         date_end = request.args.get("date_end",today.strftime("%Y-%m-%d"))
                                     
         m_stations = getStations()
+        if stations is not None and len(stations) <= 2:
+            stations = None
+
         if stations is not None:
             stations_ids = list(map(int,stations[1:len(stations)-1].split(',')))
             
@@ -103,6 +106,7 @@ def getStatsChroniques():
             initial_stations[11] = {"title": "Viriat", "color" : '#4ECB8D'}
             initial_stations[5] = {"title": "Baudières", "color" : '#FF9D3A'}
             initial_stations[54] = {"title": "Cras", "color" : '#F9E858'}
+            initial_stations[58] = {"title" : "Pont de Vaux", "color" : "#00EEFF"}
 
             #filter stations to get uniformized colors
             stations = dict()
@@ -110,10 +114,10 @@ def getStatsChroniques():
                 stations[s_id] = initial_stations[s_id]
                 
         if stations is None:
-            return ("add ?station_id=XX to generate graph !")
+            raise Exception("add ?station_id=XX to generate graph !")
 
         if type_value_id is None:
-            return ("add &type_value_id=XX to generate graph !")
+            raise Exception("add &type_value_id=XX to generate graph !")
         else:
             type_value_id = int(type_value_id)
         
@@ -142,9 +146,12 @@ def getStatsChroniques():
         json_data = json.dumps(response)
         return json_data
     except Exception as e:
-        print (e)
-        print("NO DATA")
-        return """{"error":"Aucune donnée"}"""
+        #print (e)
+        #print("NO DATA")
+        new_data = {"error" : "Aucune donnée",
+                    "exception" : str(e)}
+        #print(new_data)
+        return json.dumps(new_data)
     
 @app.route('/api/graphAlerte', methods=['GET'])
 @cache.cached(timeout=300, make_cache_key=make_key)
@@ -226,6 +233,7 @@ def graphCumulatedChroniqueHandler():
                 initial_stations[11] = {"title": "Viriat", "color" : '#4ECB8D'}
                 initial_stations[5] = {"title": "Baudières", "color" : '#FF9D3A'}
                 initial_stations[54] = {"title": "Cras", "color" : '#F9E858'}
+                initial_stations[58] = {"title" : "Pont de Vaux", "color" : "#00EEFF"}
 
                 #filter stations to get uniformized colors
                 stations = dict()
@@ -360,28 +368,86 @@ def graphChroniqueHandler():
                 response = app.send_static_file('graph_chronique_pluvio.png')
             
             return response
+        else:
+            #from PIL import Image
+            img = Image.new("RGB", (1, 1), (255, 255, 255))
+            img.save("./static/pixelEmptyGraph.png", "PNG")
+
+            response = app.send_static_file('pixelEmptyGraph.png')
+            return response
+            #return None
         
-            # m_graph.save("./static/graph_chronique_pluvio.png", ppi=200)
+@app.route('/api/graphDebit', methods=['GET'])
+@cache.cached(timeout=180, make_cache_key=make_key, unless=lambda : request.args.get("output","vega") == "png")
+def graphDebitHandler():
+    #print ("Graph ALERTE generation handler")
+    station_id = request.args.get("station_id", None)
+    show_title = request.args.get("show_title", True)
+    type_value_id = request.args.get("type_value_id", None)
+    output = request.args.get("output", "vega")
 
-            # # for imgPath in images:
-            # # image = PILImage.open(imgPath)
-            # # output = io.BytesIO()    
-            # # image.save(output, format='JPEG')
-            # # encoded_string = "data:image/jpeg;base64,"+base64.b64encode(output.getvalue()).decode()
-            # # imgCode.append(encoded_string)
+    date_start = request.args.get("date_start", None)
+    date_end = request.args.get("date_end", None)
 
-            # pil_image = Image.open("./static/graph_chronique_pluvio.png")
-            # output = io.BytesIO()
-            # pil_image.save(output, format='PNG')
+    if station_id is None:
+        return ("add ?station_id=XX to generate graph !")
+    else:
+        station_id = int(station_id)
 
-            # #out_f = io.BytesIO()
-            # #canvas.print_png(out_f)
-            # response = Response(output.getvalue(), mimetype='image/png')
-            # os.remove("./static/graph_chronique_pluvio.png")
-            # return response
+    #type value should be restricted to Debit only...
+    if type_value_id is None:
+        return ("add &type_value_id=XX to generate graph !")
+    else:
+        type_value_id = int(type_value_id)
+
+   
+    #print ("Graph generation for station_id "+str(station_id))
+    #print(show_title)
+    
+    nb_days = 30  #TODO: Handle this as variable .toml
+    today = datetime.now(timezone.utc)
+    two_days_ago = today - timedelta(days=nb_days)
+    
+    #timestamp in milliseconds
+    if date_start is not None:
+        ts_start = int(round(datetime.strptime(date_start,"%Y-%m-%d").timestamp()*1000.0))
+    else:
+        ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
+    
+    if date_end is not None:
+        ts_end = int(round(datetime.strptime(date_end,"%Y-%m-%d").timestamp()*1000.0))
+    else:
+        ts_end = int(round(today.timestamp()*1000.0))
 
 
-            #return app.send_static_file('graph_chronique_pluvio.png')
+    m_graph = generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_end, showTitle=(show_title!="false"))
+    try:
+        m_graph["usermeta"] = {
+            "embedOptions": {
+                "downloadFileName": "Debit",
+                "actions": {"export": True, "source": False, "editor": False, "compiled": False, "fullscreen": True},
+                "fullscreen": True,
+            }
+        }
+
+        
+    except TypeError:
+        m_graph = None
+
+    if output == "vega":
+        if m_graph is not None : 
+            return m_graph.to_json()
+        else:
+            print("NO DATA")
+            return """{"error":"Aucune donnée"}"""
+    elif output == "png":
+        if m_graph is not None : 
+            lock = FileLock("./static/graph_debit_hydro.png.lock")
+            with lock:
+                m_graph.save("./static/graph_debit_hydro.png", ppi=200)
+                response = app.send_static_file('graph_debit_hydro.png')
+            
+            return response
         else:
             return None
 
@@ -525,7 +591,11 @@ def mapSituationHandler():
     #remove "Absence de données"
     situations = situations[situations['thresholdName'] != "Absence de données"]
     
+    if situations.shape[0] == 0:
+        return app.send_static_file('emptyGraph.png')
+    
     #print("SITUATION IDX=0")
+    #print(situations["simulationDate"])
     #print(situations["simulationDate"].iloc[0])
 
     #list(filter(lambda x: x['idCategory'] == category_id, communications))
@@ -608,20 +678,32 @@ def graphChroniquePluvioHandler():
     else:
         type_value_id = int(type_value_id)
     
+    date_start = request.args.get("date_start", None)
+    date_end = request.args.get("date_end", None)
+
+    
     #print ("Graph generation for pluvio station_id "+str(station_id))
     #print(show_title)
     nb_days = 7
     today = datetime.now(timezone.utc)
     two_days_ago = today - timedelta(days=nb_days)
-    
+
     #timestamp in milliseconds
-    ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
-    ts_end = int(round(today.timestamp()*1000.0))
+    if date_start is not None:
+        ts_start = int(round(datetime.strptime(date_start,"%Y-%m-%d").timestamp()*1000.0))
+    else:
+        ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
+    
+    if date_end is not None:
+        ts_end = int(round(datetime.strptime(date_end,"%Y-%m-%d").timestamp()*1000.0))
+    else:
+        ts_end = int(round(today.timestamp()*1000.0))
+    
 
     m_graph = None
-    m_graph = generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, show_title==True)
-
     try:
+        m_graph = generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, show_title!="false")
+    
         m_graph["usermeta"] = {
             "embedOptions": {
                 "downloadFileName": "Chronique",
@@ -647,12 +729,18 @@ def graphChroniquePluvioHandler():
             #return app.send_static_file('analyse_chronique_pluvio.png')
             lock = FileLock("./static/analyse_chronique_pluvio.png.lock")
             with lock:
-                m_graph.save("./static/analyse_chronique_pluvio.png", ppi=200)
+                m_graph.save("./static/analyse_chronique_pluvio.png", ppi=100)
                 response = app.send_static_file('analyse_chronique_pluvio.png')
             
             return response
         else:
-            return None
+            #from PIL import Image
+            img = Image.new("RGB", (1, 1), (255, 255, 255))
+            img.save("./static/pixelEmptyGraph.png", "PNG")
+
+            response = app.send_static_file('pixelEmptyGraph.png')
+            return response
+            #return None
     
 @app.route('/api/graphAnalyseMeteo', methods=['GET'])
 @cache.cached(timeout=180, make_cache_key=make_key, unless=lambda : request.args.get("output","vega") == "png")
@@ -688,7 +776,7 @@ def graphAnalyseMeteoHandler():
         ts_end = int(round(today.timestamp()*1000.0))
 
     m_graph = None
-    m_graph = generateAnalyseMeteoGraph(station_id,ts_start, ts_end, show_title==True)
+    m_graph = generateAnalyseMeteoGraph(station_id,ts_start, ts_end, show_title!="false")
 
     try:
         m_graph["usermeta"] = {

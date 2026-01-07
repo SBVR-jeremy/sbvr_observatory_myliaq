@@ -180,7 +180,10 @@ def showNiveauxGraphs(type_value, m_title, m_loading_title, expanded=False):
                 with cols[idx %4 ]:
                     stationsFull = getStations()
                     my_station = m_extractStation(stationsFull,station_id)
-                    station_name = my_station['name'] if my_station is not None else "Station not Found"
+                    try:
+                        station_name = my_station['name'] if my_station is not None else "Station not Found"
+                    except KeyError:
+                        station_name = stations[station_id]
 
                     st.container(border=False, height=150).markdown(f'<a href="https://reyssouze.myliaq.fr/#/station/hydrometry/{station_id}/dashboard" target="_blank"><h4>:green[{station_name}]</h4></a>', unsafe_allow_html=True)
 

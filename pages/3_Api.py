@@ -47,6 +47,7 @@ import requests
 st.set_page_config(layout="wide")
 
 protect_by_password()
+
 st.title("API calls")
 
 #MAIN PROG
@@ -118,12 +119,16 @@ try:
             m_datedebut =  int(round(datetime.datetime(2025,8,1,0,0,0).timestamp()*1000.0))  #timestamp in milliseconds
             m_datefin = int(round(datetime.datetime(2025,8,31,23,59,59).timestamp()*1000.0))  #timestamp in milliseconds
             data = list(filter(lambda x: x['dateDebut'] >= m_datedebut, data))
-            data = list(filter(lambda x: x['dateFin'] <= m_datefin, data))
+            try:
+                data = list(filter(lambda x: x['dateFin'] <= m_datefin, data))
+            except: #Keyerror - pas de datefin
+                pass
             st.dataframe(data)
 
             #display json
             for line in data:
                 st.header(str(line["id"])+" "+line["title"])
+                st.subheader('     '+line["subtitle"])
                 st.html("<a href=\""+line["link"]+"\">Lien</a>")
 
         except Exception as e:

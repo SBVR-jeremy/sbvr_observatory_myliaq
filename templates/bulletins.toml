@@ -1,0 +1,29 @@
+[bmsh]
+name = "TEST Bulletin Mensuel"
+template = "./templates/bhsh1.docx"
+#template = "./templates/bhsh.docx"
+pluvio_stations = [21]
+pluvio_show_previs = false
+pluvio_show_data = false
+pluvio_show_analysis = false
+pluvio_show_yearly_analysis = false
+hydro_stations = [4]
+hydro_show_couranto = false
+hydro_show_onde = false
+hydro_show_data = false
+show_external_communications = true
+
+[bhsh]
+name = "Bulletin Hebdomadaire"
+template = "./templates/bhsh.docx"
+pluvio_stations = [21,24]
+pluvio_show_previs = true
+pluvio_show_data = true
+pluvio_show_analysis = true
+pluvio_show_yearly_analysis = true
+hydro_stations = [3,5,4,11,54,58,1]
+hydro_show_couranto = false
+hydro_show_onde = false
+hydro_show_data = true
+hydro_temp_stations = [5,11,54,58]
+show_external_communications = true

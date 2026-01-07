@@ -312,11 +312,29 @@ def generateChroniqueGraph(station_id, type_value_id, ts_start, ts_end, showTitl
     except Exception as e:
         print(e)
         return None
+
+def to_altair_datetime(dt):
+    dt = pd.to_datetime(dt)
+    return alt.DateTime(year=dt.year, month=dt.month, date=dt.day,
+                        hours=dt.hour, minutes=dt.minute, seconds=dt.second,
+                        milliseconds=0.001 * dt.microsecond)
+
+def to_altair_datetime_begining(dt):
+    dt = pd.to_datetime(dt)
+    return alt.DateTime(year=dt.year, month=dt.month, date=dt.day,
+                        hours=0, minutes=0, seconds=0,
+                        milliseconds=0)
+
+def to_altair_datetime_end(dt):
+    dt = pd.to_datetime(dt)
+    return alt.DateTime(year=dt.year, month=dt.month, date=dt.day,
+                        hours=23, minutes=59, seconds=59,
+                        milliseconds=999)
     
 def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, showTitle=True):
     try:
         samples = m_getAllPluvioMeasures(station_id, type_value_id,start_date=ts_start,end_date=ts_end)
-        #print(samples)
+        print(samples)
         #print (samples.shape[0])
         #st.line_chart(samples, x='timestamp', y='numeric_value')
         if samples.shape[0] == 0:
@@ -353,9 +371,13 @@ def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, sh
             station_name = None
             unit_symbol_y= ''
         else:
+            station_name = str(type_value['label'])+' - '+station_name
             unit_symbol_y=unit_symbol
 
-
+        
+        time_domain = [to_altair_datetime_begining(samples.min().timestamp),to_altair_datetime_end(samples.max().timestamp)]
+        #time_domain = [samples.min().timestamp, samples.max().timestamp]
+        
         #display lines for temperature
         displayLines = (type_value_id >= 4)
 
@@ -369,20 +391,14 @@ def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, sh
             c = alt.Chart(samples).mark_line(interpolate=m_interpolate,point=True).transform_calculate(
                 combined_tooltip = "datum.numeric_value"
             ).encode(
-                alt.X('timestamp:T', axis = alt.Axis(tickCount="hour", ticks = True, title = station_name, 
-                                                            #labelAngle=-75,
-                                                            labelExpr="[timeFormat(datum.value, '%H:%M'),  timeFormat(datum.value, '%H') == '00' ? timeFormat(datum.value, '%d-%m-%Y') : '', timeFormat(datum.value, '%m') == '01' ? timeFormat(datum.value, '%Y') : '']")),
-                alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=unit_symbol_y), scale=alt.Scale(domain=m_domain)),
-                #alt.Color('ust:N',legend=alt.Legend(title='Données')),
-                #alt.Color('ust:N',legend=None),
-                #opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
+                x=alt.X('timestamp:T', 
+                        axis = alt.Axis(tickCount="hour", ticks = True, title = station_name, labelAngle=-90, format="%Y-%m-%d"), 
+                        scale=alt.Scale(domain=time_domain, zero=True)),
+                y=alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=unit_symbol_y), scale=alt.Scale(domain=m_domain)),
                 tooltip=[
                     alt.Tooltip("timestamp:T",  format="%Y-%m-%d@%H:%M:%S", title="Date (local)"), 
-                    alt.Tooltip("combined_tooltip:N", title="Valeur"), 
-                    #alt.Tooltip("ust:N", title="Variable")
-                ]
-            #).add_selection(
-            #    selection 
+                    alt.Tooltip("combined_tooltip:N", title="Valeur")
+                ],
             ).properties(
                 height=200
             ).interactive()
@@ -392,20 +408,14 @@ def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, sh
             c = alt.Chart(samples).mark_bar(interpolate='monotone',point=True).transform_calculate(
                 combined_tooltip = "datum.numeric_value"
             ).encode(
-                alt.X('timestamp:T', axis = alt.Axis(tickCount="hour", ticks = True, title = station_name, 
-                                                            #labelAngle=-75,
-                                                            labelExpr="[timeFormat(datum.value, '%H:%M'),  timeFormat(datum.value, '%H') == '00' ? timeFormat(datum.value, '%d-%m-%Y') : '', timeFormat(datum.value, '%m') == '01' ? timeFormat(datum.value, '%Y') : '']")),
-                alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=unit_symbol_y), scale=alt.Scale(domain=m_domain)),
-                #alt.Color('ust:N',legend=alt.Legend(title='Données')),
-                #alt.Color('ust:N',legend=None),
-                #opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
+                x=alt.X('timestamp:T', 
+                        axis = alt.Axis(tickCount="day", ticks = True, title = station_name, labelAngle=-90, format="%Y-%m-%d"),
+                        scale=alt.Scale(domain=time_domain, zero=True)),
+                y=alt.Y( 'numeric_value:Q', axis=alt.Axis(labels=True,title=unit_symbol_y), scale=alt.Scale(domain=m_domain)),
                 tooltip=[
                     alt.Tooltip("timestamp:T",  format="%Y-%m-%d@%H:%M:%S", title="Date (local)"), 
                     alt.Tooltip("combined_tooltip:N", title="Valeur"), 
-                    #alt.Tooltip("ust:N", title="Variable")
                 ]
-            #).add_selection(
-            #    selection 
             ).properties(
                 height=200
             ).interactive()
@@ -414,7 +424,7 @@ def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, sh
                 c = c + alt.Chart(samples).transform_calculate(
                     negative='datum.numeric_value < 0'
                 ).mark_bar().encode(
-                    x='timestamp:T',
+                    x=alt.X('timestamp:T', axis = alt.Axis(tickCount="day", ticks = True, title = station_name, labelAngle=-90, format="%Y-%m-%d")),
                     y=alt.Y('numeric_value:Q', impute={'value': 0}),
                     color=alt.Color('negative:N', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF0000","#0000FF"])),
                 )
@@ -425,7 +435,7 @@ def generateChroniquePluvioGraph(station_id, type_value_id, ts_start, ts_end, sh
         showLabels = False
         if showLabels :
             m_chart = m_chart + alt.Chart(samples.query("numeric_value > 0")).mark_text(align='center',  dx=10).encode(
-                x = alt.X('timestamp:T', axis=alt.Axis(grid=False)),
+                x=alt.X('timestamp:T',  axis = alt.Axis(tickCount="day", ticks = True, title = station_name, labelAngle=-90, format="%Y-%m-%d")),
                 y = alt.Y( 'numeric_value:Q', axis=alt.Axis(grid=False)),
                 text='numeric_value'
             )
@@ -469,7 +479,9 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         samples_pluie = m_getAllPluvioMeasures(station_id, PLUIE_ID, start_date=ts_start, end_date=ts_end, grpFunc="all")
         
         #print(samples_temp.head(10))
-        
+        stations = getStationsPluvio()
+        my_station = m_extractStation(stations,station_id)
+        station_name = my_station['name'] if my_station is not None else "Station not Found"
         
         #print (samples.shape[0])
         #st.line_chart(samples, x='timestamp', y='numeric_value')
@@ -496,22 +508,22 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         )
         samples_pluie_day["timestamp"] = pd.to_datetime(samples_pluie_day.index) 
 
+        
         #print(samples_temp.head(10))
         #print(samples_pluie_day.head(10))
         #print(samples_pluie_day)
 
-
         base = alt.Chart(samples_temp_day).transform_calculate(
                 combined_tooltip = "datum.numeric_value"
-            )
+        )
         
         #generate points
         points = base.mark_point(
             filled=True, size=50, color='black'
         ).encode(
-                x=alt.X('timestamp:T', title="Date"), #, axis = alt.Axis(tickCount="day", ticks = True, title = "station_name TO EDIT", 
-                                                            #labelAngle=-75,
-                                        #                    labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
+                x=alt.X('timestamp:T', axis = alt.Axis(tickCount="month", ticks = True, title = "Date", 
+                                                            labelAngle=-75,
+                                                            labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
                 y=alt.Y( 'ymean', axis=alt.Axis(labels=True,title="°C")).scale(domain=[-10,40]), #, scale=alt.Scale(domain=m_domain)),
                 #alt.Color('ust:N',legend=alt.Legend(title='Données')),
                 #alt.Color('ust:N',legend=None),
@@ -532,19 +544,26 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         )
 
         #precipitations
-        pluies = alt.Chart(samples_pluie_day).mark_bar(width=alt.RelativeBandSize(0.7)).encode(
-            x="timestamp:T",
-            y=alt.Y("ysum:Q", axis=alt.Axis(labels=True,title="mm/jour")).scale(domain=[0,50])
+        pluies = alt.Chart(samples_pluie_day).transform_calculate(
+            incomplete="datum.timestamp.day == 31"
+        ).mark_bar(width=alt.RelativeBandSize(0.7)).encode(
+            x=alt.X('timestamp:T', axis = alt.Axis(tickCount="day", ticks = True, title = "Date", 
+                                                            labelAngle=-75,
+                                                            labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
+            y=alt.Y("ysum:Q", axis=alt.Axis(labels=True,title="mm/jour")).scale(domain=[0,50]),
+            color=alt.Color('incomplete:O', legend=None, scale=alt.Scale(domain=[True,False], range=["#4D4040","#0000FF"])),
         )
 
         m_chart = alt.layer(pluies , points + minmaxbar ).resolve_scale(
             y='independent'
+        ).properties(
+            title=['Précipitations et températures journalières' , station_name]
         )
 
-
+        ####################################################################################################################
         # jauge pluie
 
-        #1 id pluie - cumul mensuel
+        #1 id pluie - cumul mensuel over chronicle
         samples_pluie_months = m_getAllPluvioMeasures(station_id, PLUIE_ID, start_date=-1, end_date=ts_end, grpFunc="SUM_MONTH", chartMode=False)
         samples_pluie_months.index = pd.to_datetime(samples_pluie_months['timestamp'])
         
@@ -559,36 +578,50 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         #print(stats_samples_pluie_months)
 
         samples_pluie_month = samples_pluie.resample('1m', on="timestamp").agg( 
-            ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
-            ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
+           ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
+           ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
         )
-        
-        samples_pluie_month["timestamp"] = pd.to_datetime(samples_pluie_month.index) 
+
+        # samples_pluie_month = samples_pluie_months.groupby(by=samples_pluie_months.index.month).agg( 
+        #     ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
+        #     ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
+        #     ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
+        # )
+
+        #samples_pluie_month.index = samples_pluie_month.index.map(lambda t: t.replace(day=1)) #set index to first day of month
+        samples_pluie_month["timestamp"] = pd.to_datetime(samples_pluie_month.index)
         samples_pluie_month["month"] = samples_pluie_month['timestamp'].dt.month
+        samples_pluie_month["next_month_ts"] = pd.to_datetime(samples_pluie_month.index.map(lambda t: t.replace(day=1))) + pd.DateOffset(months=1)
+        samples_pluie_month["mid_month_ts"] = pd.to_datetime(samples_pluie_month.index.map(lambda t: t.replace(day=1))) + pd.DateOffset(days=15)
 
         #add column mean_months
         samples_pluie_month["mean_months"] = None
         samples_pluie_month["evolution"] = None
         for idx, row in samples_pluie_month.iterrows():
             a = stats_samples_pluie_months[stats_samples_pluie_months["month"] == row["month"]]["ymean"]
+            
             #print(a)
             samples_pluie_month.at[idx, "mean_months"] = float(a.iloc[0])
 
             evol_percent = round(( row["ysum"] / float(a.iloc[0]) * 100.0 ) - 100,2)
-            if evol_percent >=0:
-                samples_pluie_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
-            else:
-                samples_pluie_month.at[idx, "evolution_percent"] = " "+str(evol_percent)+"%"
+            # if evol_percent >=0:
+            #     samples_pluie_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
+            # else:
+            #     samples_pluie_month.at[idx, "evolution_percent"] = " "+str(evol_percent)+"%"
+            samples_pluie_month.at[idx, "evolution_percent"] = evol_percent
 
             evol_value = round(row["ysum"] - float(a.iloc[0]) ,2)
-            if evol_value >=0:
-                samples_pluie_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"mm"
-            else:
-                samples_pluie_month.at[idx, "evolution_value"] = " "+str(evol_value)+"mm"
+            # if evol_value >=0:
+            #     samples_pluie_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"mm"
+            # else:
+            #     samples_pluie_month.at[idx, "evolution_value"] = " "+str(evol_value)+"mm"
+            samples_pluie_month.at[idx, "evolution_value"] = evol_value
+
+            samples_pluie_month.at[idx, "month_complete"] = ts_start 
         
         #samples_pluie_month["mean_months"] = samples_pluie_month.apply(lambda x: stats_samples_pluie_months["ymean"].filter(stats_samples_pluie_months["month"] == x.index.month))
 
-        #print(samples_pluie_month.head(10))
+        print(samples_pluie_month.head(10))
 
         nb_jours_pluie = samples_pluie_day[samples_pluie_day["ysum"]>0].shape[0]
         print("NB JOUR PLUIE:"+str(nb_jours_pluie))
@@ -596,12 +629,53 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         nb_jours_sup_30 = samples_temp_day[samples_temp_day["ymax"]>=30].shape[0]
         print("NB JOUR >30:"+str(nb_jours_sup_30))
 
+        #print(samples_pluie_month.head(10))
+        base1 = alt.Chart(samples_pluie_month)
+
+        sum_pluies = base1.mark_rect().transform_calculate(
+            incomplete="datum.timestamp.day == 31"
+        ).encode(
+            x=alt.X('ysum:Q', axis=alt.Axis(grid=True, title='')).scale(domain=[0,300]),
+            y=alt.Y('timestamp:T', axis=alt.Axis(grid=True, tickCount="month", title='mois', labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
+            x2 = alt.value(0),
+            y2=alt.Y2("next_month_ts:T"),
+            color=alt.Color('incomplete:O', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF0FCB","#2F00FF"])),
+        ).properties(
+            title=['Rapport du cumul mensuel des précipitations aux normales' , station_name]
+        )
+
+        sum_pluies_rule = base1.mark_rule(color='green').encode(
+            x=alt.X("mean_months", title=''),
+            y=alt.Y('timestamp:T'),
+            y2=alt.Y2("next_month_ts:T"),
+            size=alt.value(5),
+        )
+
+        sum_pluies_labels = alt.Chart(samples_pluie_month.query("ysum > 0")).mark_text(align='center',  dx=15).encode(
+                y = alt.Y('mid_month_ts:T'),
+                x = alt.X( 'ysum:Q', axis=alt.Axis(grid=False)),
+                text='label:N'
+        ).transform_calculate(label='format(datum.ysum, ".1f") + " mm"')
+
+        sum_pluies_labels_ev = alt.Chart(samples_pluie_month.query("ysum > 0")).transform_calculate(
+                    negative='datum.evolution_percent < 0',
+                    evolution_percent_lbl = f'datum.evolution_percent <0 ? format(datum.evolution_percent,".1f") + " %" : "+" + format(datum.evolution_percent,".1f") + " %"'
+                ).mark_text(align='center',  dx=15, color="white").encode(
+                y = alt.Y('mid_month_ts:T'),
+                x = alt.value(10),
+                text=alt.Text("evolution_percent_lbl:N"),
+                color=alt.Color('negative:N', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF0000","#FFFFFF"])),
+        )
+
+        m_chart1 = sum_pluies + sum_pluies_rule  + sum_pluies_labels + sum_pluies_labels_ev
+
+        ####################################################################################################################
         #4 id temperature - moy mensuel
         samples_temp_months = m_getAllPluvioMeasures(station_id, TEMPERATURE_ID, start_date=-1, end_date=ts_end, grpFunc="AVERAGE", chartMode=False)
         samples_temp_months.index = pd.to_datetime(samples_temp_months['timestamp'])
         
         #print(samples_temp_months.head(10))
-
+    
         stats_samples_temp_months = samples_temp_months.groupby(by=samples_temp_months.index.month).agg( 
             ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
             ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
@@ -615,8 +689,12 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
             ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
         )
         
+        samples_temp_month.index = samples_temp_month.index.map(lambda t: t.replace(day=1)) #set index to first day of month
+        
         samples_temp_month["timestamp"] = pd.to_datetime(samples_temp_month.index) 
         samples_temp_month["month"] = samples_temp_month['timestamp'].dt.month
+        samples_temp_month["next_month_ts"] = samples_temp_month['timestamp'] + pd.DateOffset(months=1)
+        samples_temp_month["mid_month_ts"] = samples_temp_month['timestamp'] + pd.DateOffset(days=15)
 
         #print(stats_samples_temp_months)
         #add column mean_months
@@ -628,17 +706,22 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
             a = stats_samples_temp_months[stats_samples_temp_months["month"] == row["month"]]["ymean"]
             #print(a)
             samples_temp_month.at[idx, "mean_months"] = float(a.iloc[0])
-            evol_percent = round(( row["ymean"] / float(a.iloc[0]) * 100.0 ) - 100,2)
-            if evol_percent >=0:
-                samples_temp_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
-            else:
-                samples_temp_month.at[idx, "evolution_percent"] = " -"+str(evol_percent)+"%"
+            evol_percent = round(( row["ymean"] / float(a.iloc[0]) * 100.0 ) - 100, 2)
+            # if evol_percent >=0:
+            #     samples_temp_month.at[idx, "evolution_percent"] = " +"+str(evol_percent)+"%"
+            # else:
+            #     samples_temp_month.at[idx, "evolution_percent"] = " -"+str(evol_percent)+"%"
+            samples_temp_month.at[idx, "evolution_percent"] = evol_percent
+
 
             evol_value = round(row["ymean"] - float(a.iloc[0]) ,2)
-            if evol_value >=0:
-                samples_temp_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"°C"
-            else:
-                samples_temp_month.at[idx, "evolution_value"] = " -"+str(evol_value)+"°C"
+            # if evol_value >=0:
+            #     samples_temp_month.at[idx, "evolution_value"] = " +"+str(evol_value)+"°C"
+            # else:
+            #     samples_temp_month.at[idx, "evolution_value"] = " -"+str(evol_value)+"°C"
+            samples_temp_month.at[idx, "evolution_value"] = evol_value
+
+
 
 
         
@@ -648,62 +731,39 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
         #norm_temp_mois = samples_temp["ymean"].mean()
         #print("Normale temp mensuelle :"+str(norm_temp_mois))
 
-        base1 = alt.Chart(samples_pluie_month)
-
-        sum_pluies = base1.mark_bar().encode(
-            x=alt.X('ysum', axis=alt.Axis(grid=True, title='')).scale(domain=[0,300]),
-            y=alt.Y('timestamp:O', axis=None),
-        ).properties(
-            title='Rapport du cumul mensuel des précipitations aux normales'
-        )
-
-        sum_pluies_rule = base1.mark_rule(color='red').encode(
-            x=alt.X("mean_months", title=''),
-            #y=alt.Y('timestamp:O', axis=None),
-            size=alt.value(5),
-        )
-
-        sum_pluies_labels = alt.Chart(samples_pluie_month.query("ysum > 0")).mark_text(align='center',  dx=10).encode(
-                y = alt.Y('timestamp:O', axis=alt.Axis(grid=False)),
-                x = alt.X( 'ysum:Q', axis=alt.Axis(grid=False)),
-                text='ysum'
-        )
-
-        sum_pluies_labels_ev = alt.Chart(samples_pluie_month.query("ysum > 0")).mark_text(align='center',  dx=10, color="white").encode(
-                y = alt.Y('timestamp:O', axis=alt.Axis(grid=False)),
-                x = alt.value(10),
-                text='evolution_percent'
-        )
-
-        m_chart1 = sum_pluies + sum_pluies_rule  + sum_pluies_labels + sum_pluies_labels_ev
 
         base2 = alt.Chart(samples_temp_month)
 
         mean_temps = base2.mark_bar().encode(
             x=alt.X('ymean', axis=alt.Axis(grid=True, title='')).scale(domain=[0,40]),
-            y=alt.Y('timestamp:O', axis=None),
+            y=alt.Y('timestamp:O', axis=alt.Axis(grid=True,title='mois', labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
         ).properties(
-            title='Rapport des températures moyennes mensuelles aux normales'
+            title=[ 'Rapport des températures moyennes mensuelles aux normales', station_name ]
         )
 
         mean_temps_rule = base2.mark_rule(color='red').encode(
             x=alt.X("mean_months", title=''),
-            #y=alt.Y('timestamp:O', axis=None),
+            y=alt.Y('timestamp:T'),
+            y2=alt.Y2("next_month_ts:T"),
             size=alt.value(5),
         )
 
         mean_temps_labels = alt.Chart(samples_temp_month).mark_text(align='center',  dx=10).encode(
-                y = alt.Y('timestamp:O', axis=alt.Axis(grid=False)),
+                y = alt.Y('timestamp:T', axis=alt.Axis(grid=False)),
                 x = alt.X( 'ymean:Q', axis=alt.Axis(grid=False)),
-                text='ymean'
-        )
+                text='label:N'
+        ).transform_calculate(label='format(datum.ymean, ".1f") + " °C"')
 
-        mean_temps_labels_ev = alt.Chart(samples_temp_month).mark_text(align='center',  dx=10, color="red").encode(
-                y = alt.Y('timestamp:O', axis=alt.Axis(grid=False)),
+        mean_temps_labels_ev = alt.Chart(samples_temp_month).transform_calculate(
+                    negative='datum.evolution_value < 0',
+                    evolution_value_lbl = f'datum.evolution_value <0 ? format(datum.evolution_value,".1f") + " °C" : "+" + format(datum.evolution_value,".1f") + " °C"'
+                ).mark_text(align='center',  dx=15, color="white").encode(
+                y = alt.Y('timestamp:T', axis=alt.Axis(grid=False)),
                 x = alt.value(10),
-                text='evolution_value'
+                text=alt.Text("evolution_value_lbl:N"),
+                color=alt.Color('negative:N', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF0000","#FFFFFF"])),
         )
-
+    
         m_chart2 = mean_temps + mean_temps_rule  + mean_temps_labels + mean_temps_labels_ev
         
         m_chart = alt.hconcat( alt.vconcat(m_chart1, m_chart2),  m_chart)
@@ -723,6 +783,12 @@ def generateAnalyseMeteoGraph(station_id, ts_start, ts_end, showTitle=True):
 def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
     
     try:
+
+        stations = getStationsPluvio()
+        my_station = m_extractStation(stations,station_id)
+        station_name = my_station['name'] if my_station is not None else "Station not Found"
+        
+
         # cummul mensuels
         #1 id pluie - cumul mensuel
         samples_pluie_months = m_getAllPluvioMeasures(station_id, PLUIE_ID ,start_date=-1,  grpFunc="SUM_MONTH", chartMode=True)
@@ -836,21 +902,14 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         points = base.mark_point(
             filled=True, size=50, color='red'
         ).encode(
-                x=alt.X('month(timestamp):O' , axis=alt.Axis(labels=True,title="Mois")), #, axis = alt.Axis(tickCount="day", ticks = True, title = "station_name TO EDIT", 
-                                                            #labelAngle=-75,
-                                        #                    labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
-                y=alt.Y( 'ymean', axis=alt.Axis(labels=True,title="°C")).scale(domain=[-10,40]), #, scale=alt.Scale(domain=m_domain)),
-                #alt.Color('ust:N',legend=alt.Legend(title='Données')),
-                #alt.Color('ust:N',legend=None),
-                #opacity=alt.condition(selection, alt.value(1), alt.value(0.2)),
-                #tooltip=[
-                #    alt.Tooltip("timestamp:T",  format="%Y-%m-%d@%H:%M:%S", title="Date (local)"), 
-                #    alt.Tooltip("combined_tooltip:N", title="Valeur"), 
-                #    #alt.Tooltip("ust:N", title="Variable")
-                #]
-            #).add_selection(
-            #    selection 
-            ).properties( width=600)
+            x=alt.X('month(timestamp):O' , axis=alt.Axis(labels=True,title="Mois")), #, axis = alt.Axis(tickCount="day", ticks = True, title = "station_name TO EDIT", 
+                                                        #labelAngle=-75,
+                                    #                    labelExpr="[timeFormat(datum.value, '%d-%m-%Y')]")),
+            y=alt.Y( 'ymean', axis=alt.Axis(labels=True,title="°C")).scale(domain=[-10,40]), #, scale=alt.Scale(domain=m_domain)),
+        ).properties(
+            width=600,
+            title=['Rapport des moyennes mensuelles des températures aux normales' , station_name]
+        )
         
 
         #points1 is the normale saisoniere
@@ -895,7 +954,9 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         #m_chart = points + points1 + minmaxbar +temp_labels_ev
         m_chart = points  + minmaxbar +temp_labels_ev
 
-        base1 = alt.Chart(samples_pluie_month)
+        base1 = alt.Chart(samples_pluie_month).properties( 
+            title=['Rapport des cumuls mensuels des précipitations aux normales' , station_name]
+        )
 
         sum_pluies = base1.mark_bar().encode(
             x=alt.X('month(timestamp):O', axis=alt.Axis(labels=True,title="Mois")),
@@ -908,7 +969,8 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         #     size=alt.value(5),
         # )
 
-        sum_pluies_labels = alt.Chart(samples_pluie_month.query("ysum > 0")).mark_text(align='center',  dx=0).encode(
+        sum_pluies_labels = alt.Chart(samples_pluie_month.query("ysum > 0")
+                ).mark_text(align='center',  dx=0, dy=-5, fontSize=7 ).encode(
                 x = alt.X('month(timestamp):O', axis=alt.Axis(grid=False, title="")),
                 y = alt.Y( 'ysum:Q', axis=alt.Axis(grid=False, title="")),
                 text='ysum'
@@ -918,12 +980,12 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         sum_pluies_labels_ev = alt.Chart(samples_pluie_month.query("ysum > 0")).transform_calculate(
                     negative='datum.evolution_percent < 0',
                     evolution_percent_lbl = f'datum.evolution_percent <0 ? format(datum.evolution_percent,".0f") + " %" : "+" + format(datum.evolution_percent,".0f") + " %"'
-                ).mark_text(align='center',  dy=10, color="red").encode(
+                ).mark_text(align='center',  dy=10, color="red", fontSize=7).encode(
                 x = alt.X('month(timestamp):O', axis=alt.Axis(grid=False, title="")),
                 y = alt.Y( 'ysum:Q', axis=alt.Axis(grid=False, title="")),
                 #text='evolution_percent',
                 text='evolution_percent_lbl:N',
-                color=alt.Color('negative:N', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF0000","#0000FF"])),
+                color=alt.Color('negative:N', legend=None, scale=alt.Scale(domain=[True,False], range=["#FF9100","#00E5FF"])),
         )
 
         m_chart1 = sum_pluies + sum_pluies_labels + sum_pluies_labels_ev
@@ -933,14 +995,87 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
         #combine 2 graphs
         m_chart = alt.hconcat( m_chart1, m_chart )
         #m_chart = alt.hconcat( alt.vconcat(m_chart1, m_chart2), m_chart )
-
         m_chart.properties(
-                #height=200
+               title=[ 'Analyse annuelle', station_name ]
             ).interactive()
-        
-        
         return m_chart
     
     except Exception as e:
         print(traceback.format_exc())
         raise e
+    
+
+def generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_end, showTitle=True):
+    try:
+
+        #samples = m_getAllSamplesAnalyse(station_id, type_value_id,start_date=ts_start,end_date=ts_end, grpFunc="AVERAGE")
+        #print(samples.head(10))
+        
+        # recup du QMNA5
+        samples = m_getQMNA5(station_id)
+        
+        #st.line_chart(samples, x='timestamp', y='numeric_value')
+        if samples.shape[0] == 0:
+            return
+
+        stations = getStations()
+        my_station = m_extractStation(stations,station_id)
+        station_name = my_station['name'] if my_station is not None else "Station not Found"
+
+        type_values = getDataTypeHydro()
+        type_value = m_extractStation(type_values,type_value_id)
+
+        try:
+            unit_symbol = type_value["unit"] if type_value is not None else "Unit not Found"
+        except KeyError:
+            unit_symbol = '' #This type_value has no unit
+
+        #zoom on y axis - 0.5° over and zero min
+        y_min = min(samples.min(numeric_only=True).numeric_value, 0 )
+        y_max = samples.max(numeric_only=True).numeric_value + 0.5
+
+        m_domain = [y_min, y_max]
+        
+        if not showTitle:
+            station_name = None
+            unit_symbol_y= ''
+        else:
+            unit_symbol_y=unit_symbol
+
+        print(samples.head(10))
+        samples = pd.melt(samples, id_vars=['timestamp'], value_vars=['ymean', 'ymin', 'ymax'])
+
+        print(samples.head(10))
+        #print("design graph")
+        base = alt.Chart(samples).mark_line().encode(
+            x=alt.X('timestamp:T'),
+            y=alt.Y('value:Q'),
+            color=alt.Color('variable')
+        )
+
+        m_chart = base
+        
+        # #recup des seuils
+        if False:
+            seuils = m_getAllSeuils(station_id, type_value_id)
+            #print(seuils)
+            if seuils.shape[0] > 0:
+                #print(seuils)
+                domain_ = list(seuils['name']) 
+                #print(domain_)
+                try:
+                    range_ = list(seuils['htmlColor'])
+                    range_ = ['black' if str(x)=='nan' else x for x in range_] #replace NaN values
+                except :
+                    range_ = []
+                    for i in range(0,len(domain_)): range_.append("black")
+
+                #print(range_)
+                m_s = alt.Chart(seuils).mark_rule().encode(y='value', color=alt.Color("name:N", title="", legend=None, scale=alt.Scale(domain=domain_, range=range_)))
+                m_t = alt.Chart(seuils).mark_text().encode(y='value', text='name:N')
+                m_chart =  m_s + m_t + m_chart
+            
+        return m_chart
+    except Exception as e:
+        print(e)
+        return None

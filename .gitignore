@@ -14,6 +14,18 @@ temp/
 static/bulletin/*.pdf
 static/bulletin/Converted_files/
 static/temp/
+static/*.png
+static/bulletin/*.png
+static/bulletin/*.docx
+
+templates/bhsh1.docx
+templates/~*.docx
+
+static/*.qmd
+static/*.db
+*Thumbs.db
+*.lock
+*.pyBACK
 
 dist/
 build/

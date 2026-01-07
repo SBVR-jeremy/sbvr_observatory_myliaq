@@ -85,10 +85,15 @@ def m_getAllSamplesAnalyse(station_id, type_value_id, start_date=None, end_date=
         else :
             ts_end = end_date
     
+    # print(ts_start)
+    # print(ts_end)
+    # print(pd.to_datetime(ts_start/1000.0, unit='s'))
+    # print(pd.to_datetime(ts_end/1000.0, unit='s'))
 
     url = "https://reyssouze.myliaq.fr/api/hydrologicalStation/chronic/measures"
     print(url)
 
+    #CARREFUL startDate and endDate HAVE TO BE UTC ! we need to perform conversion before !!!!
     parameters = {
             "stationId" :  station_id,
             "dataType" :   type_value_id ,
@@ -183,6 +188,10 @@ def m_getAllPluvioMeasures(station_id, type_value_id, start_date=None, end_date=
         if type_value_id == 2 : 
             type_value_id = -1
 
+        #hack for grpFunc if temp, 
+        if type_value_id == 4 and grpFunc == "SUM_DAY":
+            grpFunc="AVERAGE"
+
         parameters = {
             "stationId" :  station_id,
             "dataType" :   type_value_id ,
@@ -225,7 +234,6 @@ def m_getAllPluvioMeasures(station_id, type_value_id, start_date=None, end_date=
     except Exception as e:
         print(traceback.format_exc())
         raise e
-
 
 def m_getAllSeuils(station_id, type_value_id=None):
     
@@ -520,12 +528,16 @@ def m_getStatsChroniqueHydro(stations_id, type_value_id, start_date, end_date ):
         else :
             ts_end = end_date
 
+    # print(ts_start)
+    # print(ts_end)
+    # print(pd.to_datetime(ts_start/1000.0, unit='s'))
+    # print(pd.to_datetime(ts_end/1000.0, unit='s'))
+    
     stats_array = pd.DataFrame(columns = ["station_id","min","max","mean", "sum", "nb", "nb_computed", "raw_daily_data"])
 
     for station_id in stations_id:
         #print(station_id)
-        #print(ts_start)
-        #print(ts_end)
+        
         #print(type_value_id)
         #4 id temperature
         samples = m_getAllSamplesAnalyse(station_id, type_value_id, start_date=ts_start, end_date=ts_end, grpFunc="all")
@@ -544,11 +556,19 @@ def m_getStatsChroniqueHydro(stations_id, type_value_id, start_date, end_date ):
             ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
         )
         samples_day["timestamp"] = pd.to_datetime(samples_day.index) 
-        
+        samples_day["datetime"] =samples_day["timestamp"].apply(lambda x : x.strftime("%m/%d/%Y, %H:%M:%S"))
+
         #compute specific nb
         if type_value_id == 7:
-            nb_jours_sup_30 = samples_day[samples_day["ymax"]>=30].shape[0]
-            nb_computed = nb_jours_sup_30
+            nb_jours_sup_30 = samples_day[samples_day["ymax"]>=30].shape[0] #Nb of day over 30°C
+            nb_jours_inf_0 = samples_day[samples_day["ymin"]<=0].shape[0] #Nb of day under 0°C
+            nb_jours_dce_0 = samples_day[samples_day["ymax"]<=24].shape[0] #nb of day in DCE under 24° -tres bon
+            nb_jours_dce_1 = samples_day[(samples_day["ymax"]>24) & (samples_day["ymax"]<=25.5)].shape[0] #nb of day in DCE over 24° and below 25.5° - bon
+            nb_jours_dce_2 = samples_day[(samples_day["ymax"]>25.5) & (samples_day["ymax"]<=27)].shape[0] #nb of day in DCE over 25.5° and below 27° - moyen
+            nb_jours_dce_3 = samples_day[(samples_day["ymax"]>27) & (samples_day["ymax"]<=28)].shape[0] #nb of day in DCE over 27° and below 28° - medriocre
+            nb_jours_dce_4 = samples_day[samples_day["ymax"]>28].shape[0] #nb of day in DCE over 28° - mauvais
+
+            nb_computed = [nb_jours_sup_30, nb_jours_inf_0, nb_jours_dce_0, nb_jours_dce_1, nb_jours_dce_2, nb_jours_dce_3, nb_jours_dce_4]
         else:
             nb_computed = None
 
@@ -569,3 +589,31 @@ def m_getStatsChroniqueHydro(stations_id, type_value_id, start_date, end_date ):
 
     #print(stats_array)
     return stats_array.to_json()
+
+def m_getQMNA5(station_id):
+    type_value_id = 5 #constant for DEBIT #TODO: Should be moved into conf !
+    debits_moyen_journaliers = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=-1, end_date=-1, grpFunc="AVERAGE",chartMode=True)
+    
+    #print(debits_moyen_journaliers.head(3))
+
+    #print(debits_moyen_journaliers.tail(3))
+    
+    if debits_moyen_journaliers.shape[0] == 0:
+        return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification', 'initialPoint','unknown', 'station_id'])
+
+    #compute QMNA5 from data
+    return_period = 5
+    freq_return = 1/return_period #0.2
+
+    #group by month
+    debits_moyen_mensuels = debits_moyen_journaliers.resample('1m', on="timestamp").agg( 
+            ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
+            ymin=pd.NamedAgg(column="numeric_value", aggfunc="min"),
+            ymax=pd.NamedAgg(column="numeric_value", aggfunc="max"),
+            ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
+            ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
+        )
+    debits_moyen_mensuels['timestamp'] = debits_moyen_mensuels.index
+    debits_moyen_mensuels['numeric_value'] = debits_moyen_mensuels['ymean']
+
+    return debits_moyen_mensuels
