@@ -18,7 +18,6 @@ static/*.png
 static/bulletin/*.png
 static/bulletin/*.docx
 
-templates/bhsh1.docx
 templates/~*.docx
 
 static/*.qmd
