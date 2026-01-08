@@ -192,7 +192,10 @@ def showNiveauxGraphs(type_value, m_title, m_loading_title, expanded=False):
                     try:
                         url = "http://127.0.0.1:1111/api/graphUpdate?station_id="+str(station_id)+"&type_value_id="+str(type_value["id"])+"&show_title=false"
                         #print(url)
-                        data = requests.get(url).json()
+                        #data = requests.get(url).json()
+                        response = requests.get(url)
+                        data = json.loads(response.content)
+
                         #display json
                         #st.write(data)
                     
@@ -205,7 +208,14 @@ def showNiveauxGraphs(type_value, m_title, m_loading_title, expanded=False):
                     try:
                         url = "http://127.0.0.1:1111/api/graphChronique?station_id="+str(station_id)+"&type_value_id="+str(type_value["id"])+"&show_title=false"
                         print(url)
-                        data = requests.get(url).json()
+                        response = requests.get(url)
+
+                        #print(response.status_code)
+                        #print(response.headers)
+                        
+                        #data = response.json()
+                        data = json.loads(response.content)
+
                         #display json
                         #st.write(data)
                     
