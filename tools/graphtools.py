@@ -19,6 +19,8 @@ import altair as alt
 from datetime import datetime, date, timezone
 import traceback
 
+import numpy as np
+
 from tools.queries import *
 from tools.utility import *
 
@@ -252,6 +254,11 @@ def generateChroniqueGraph(station_id, type_value_id, ts_start, ts_end, showTitl
             y_max = samples.max(numeric_only=True).numeric_value + 0.1
 
             m_domain = [y_min, y_max]
+        # elif unit_symbol == 'm (NGF)':
+        #     #zoom on y axis - 0.5° ove and above
+        #     y_min = samples.min(numeric_only=True).numeric_value - 1
+        #     y_max = samples.max(numeric_only=True).numeric_value + 1
+        #     m_domain = [y_min, y_max]
         else:
             #zoom on y axis - 0.5° ove and above
             y_min = samples.min(numeric_only=True).numeric_value - 0.5
@@ -304,7 +311,7 @@ def generateChroniqueGraph(station_id, type_value_id, ts_start, ts_end, showTitl
                 for i in range(0,len(domain_)): range_.append("black")
 
             #print(range_)
-            m_s = alt.Chart(seuils).mark_rule().encode(y='value', color=alt.Color("name:N", title="", legend=None, scale=alt.Scale(domain=domain_, range=range_)))
+            m_s = alt.Chart(seuils).mark_rule().encode(y=alt.Y('value', scale=alt.Scale(domain=m_domain)), color=alt.Color("name:N", title="", legend=None, scale=alt.Scale(domain=domain_, range=range_)))
             m_t = alt.Chart(seuils).mark_text().encode(y='value', text='name:N')
             m_chart =  m_s + m_t + m_chart
             
@@ -1008,14 +1015,118 @@ def graphAnalyseAnnuelleMeteo(station_id,ts_start, ts_end, showTitle=True):
 def generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_end, showTitle=True):
     try:
 
+        #ts_start=-1
+        #ts_end=-1
+
         #samples = m_getAllSamplesAnalyse(station_id, type_value_id,start_date=ts_start,end_date=ts_end, grpFunc="AVERAGE")
         #print(samples.head(10))
+        qj = m_getAllSamplesAnalyse(station_id, type_value_id,start_date=ts_start,end_date=ts_end, grpFunc="RAW",chartMode=True)
+        qj.rename({'numeric_value': 'raw_value'}, axis=1, inplace=True)
+        qm3j = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=ts_start, end_date=ts_end, grpFunc="CUMUL_PERSO_AVERAGE_72",chartMode=True) 
+        qm3j.rename({'numeric_value': 'qm3j_value'}, axis=1, inplace=True)
         
-        # recup du QMNA5
-        samples = m_getQMNA5(station_id)
+
+        type_value_id = 5 #constant for DEBIT #TODO: Should be moved into conf !
+        debits_moyen_journaliers = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=-1, end_date=-1, grpFunc="AVERAGE",chartMode=True)
+        #print(debits_moyen_journaliers.head(3))
+        #print(debits_moyen_journaliers.tail(3))
         
-        #st.line_chart(samples, x='timestamp', y='numeric_value')
-        if samples.shape[0] == 0:
+        if debits_moyen_journaliers.shape[0] == 0:
+            return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification', 'initialPoint','unknown', 'station_id'])
+
+        #compute QMNA5 from data
+        return_period = 5
+        freq_return = 1/return_period #0.2
+
+        debits_moyen_journaliers.index = pd.to_datetime(debits_moyen_journaliers['timestamp'])
+        
+
+        debits_moyen_mensuels = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=-1, end_date=-1, grpFunc="AVERAGE",chartMode=True)
+        
+        #filter données qualifiées
+        debits_moyen_mensuels = debits_moyen_mensuels[debits_moyen_mensuels['qualification']<4]
+        debits_moyen_mensuels.index = pd.to_datetime(debits_moyen_mensuels['timestamp'])
+
+        print('MODULE = ')
+        print(debits_moyen_mensuels['numeric_value'].mean())
+
+        print('MIN = ')
+        print(debits_moyen_mensuels[debits_moyen_mensuels['numeric_value']== debits_moyen_mensuels['numeric_value'].min()])
+        print('MAX = ')
+        print(debits_moyen_mensuels[debits_moyen_mensuels['numeric_value']== debits_moyen_mensuels['numeric_value'].max()])
+        
+        # #group by month
+        # debits_moyen_mensuels = debits_moyen_journaliers.resample('1m', on="timestamp").agg( 
+        #         ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
+        #         ymin=pd.NamedAgg(column="numeric_value", aggfunc="min"),
+        #         ymax=pd.NamedAgg(column="numeric_value", aggfunc="max"),
+        #         ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
+        #         ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
+        #     )
+        # debits_moyen_mensuels['timestamp'] = debits_moyen_mensuels.index
+        # debits_moyen_mensuels['numeric_value'] = debits_moyen_mensuels['ymean']
+
+        moyenne_interannuelle_debits_moyen_mensuels = debits_moyen_mensuels.groupby(by=debits_moyen_mensuels.index.month).agg( 
+            ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
+            ymin=pd.NamedAgg(column="numeric_value", aggfunc="min"),
+            ymax=pd.NamedAgg(column="numeric_value", aggfunc="max"),
+            ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
+            ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
+        )
+        moyenne_interannuelle_debits_moyen_mensuels['month'] = moyenne_interannuelle_debits_moyen_mensuels.index
+
+        print('Moyenne interannuelle des débits moyens')
+        print(moyenne_interannuelle_debits_moyen_mensuels)
+        # #print("design graph")
+        title = alt.TitleParams("Moyenne interannuelle des débits moyens", anchor='middle')
+        base0 = alt.Chart(moyenne_interannuelle_debits_moyen_mensuels, title=title).mark_bar().encode(
+            x=alt.X('month:N'),
+            y=alt.Y('ymean:Q', title='m3/s'),
+        )
+
+        quantiles = m_getQMNA5(station_id)
+        if not quantiles.empty:
+    
+            line = alt.Chart(quantiles).mark_rule().encode(
+                y=alt.Y('q',title='')
+            )
+
+            text = line.mark_text(
+                align='left',
+                baseline='middle',
+                dx=3  # Nudges text to right so it doesn't appear on top of the bar
+            ).encode(
+                text='nom:N'
+            )
+        
+            m_chart = base0 + line + text
+        else:
+            m_chart = base0
+
+        return m_chart
+    except Exception as e:
+        print(e)
+        return None
+    
+
+def generateChroniquePeriodeRetour2Graph(station_id, type_value_id, ts_start, ts_end, showTitle=True):
+    try:
+
+        #ts_start = -1
+        #ts_end = -1
+
+        type_value_id = 5 #constant for DEBIT #TODO: Should be moved into conf !
+        debits_moyen_journaliers = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=ts_start, end_date=ts_end, grpFunc="AVERAGE",chartMode=True)
+        #print(debits_moyen_journaliers.head(3))
+        #print(debits_moyen_journaliers.tail(3))
+        
+        if debits_moyen_journaliers.shape[0] == 0:
+            return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification', 'initialPoint','unknown', 'station_id'])
+
+        #print(debits_moyen_journaliers.head(10))
+        #st.line_chart(debits_moyen_journaliers, x='timestamp', y='numeric_value')
+        if debits_moyen_journaliers.shape[0] == 0:
+            print('no samples')
             return
 
         stations = getStations()
@@ -1031,8 +1142,8 @@ def generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_
             unit_symbol = '' #This type_value has no unit
 
         #zoom on y axis - 0.5° over and zero min
-        y_min = min(samples.min(numeric_only=True).numeric_value, 0 )
-        y_max = samples.max(numeric_only=True).numeric_value + 0.5
+        y_min = min(debits_moyen_journaliers.min(numeric_only=True).numeric_value, 0 )
+        y_max = debits_moyen_journaliers.max(numeric_only=True).numeric_value + 0.5
 
         m_domain = [y_min, y_max]
         
@@ -1042,18 +1153,54 @@ def generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_
         else:
             unit_symbol_y=unit_symbol
 
-        print(samples.head(10))
-        samples = pd.melt(samples, id_vars=['timestamp'], value_vars=['ymean', 'ymin', 'ymax'])
-
-        print(samples.head(10))
-        #print("design graph")
-        base = alt.Chart(samples).mark_line().encode(
+        title = alt.TitleParams("Débits moyens journaliers", anchor='middle')
+        base = alt.Chart(debits_moyen_journaliers, title=title).mark_line().encode(
             x=alt.X('timestamp:T'),
-            y=alt.Y('value:Q'),
-            color=alt.Color('variable')
+            y=alt.Y('numeric_value:Q'),
         )
+        
+        quantiles_hydro = m_getQMNA5_HYDROPORTAIL(station_id)
+        if not quantiles_hydro.empty:
+            quantiles_hydro = quantiles_hydro[quantiles_hydro['T'].isin([1,5])] #filter only over QMNA5
+            quantiles_hydro['nom'] = quantiles_hydro['nom'] + " HYDROPORTAIL"
+            line = alt.Chart(quantiles_hydro).mark_rule().encode(
+                y=alt.Y('q',title=''),
+                color=alt.value("#FF0000")
+            )
 
-        m_chart = base
+            text = line.mark_text(
+                align='left',
+                baseline='middle',
+                dx=3  # Nudges text to right so it doesn't appear on top of the bar
+            ).encode(
+                text='label:N'
+            ).transform_calculate(label=f'datum.nom + " "+ format(datum.q,".3f")+ "m3/s"')
+
+            m_chart = base + line + text
+        else:
+            m_chart = base
+
+        quantiles = m_getQMNA5(station_id)
+        if not quantiles.empty:
+            quantiles = quantiles[quantiles['T'].isin([1,5])] #filter only over QMNA5
+            #quantiles['nom'] = "QMNA5"
+            line = alt.Chart(quantiles).mark_rule().encode(
+                y=alt.Y('q',title=''),
+                color=alt.value("#1EFF00")
+            )
+
+            text = line.mark_text(
+                align='left',
+                baseline='middle',
+                dx=3  # Nudges text to right so it doesn't appear on top of the bar
+            ).encode(
+                text='label:N'
+            ).transform_calculate(label=f'datum.nom + " "+ format(datum.q,".3f") + "m3/s"')
+        
+            m_chart = m_chart + line + text
+        else:
+            m_chart = m_chart
+
         
         # #recup des seuils
         if False:
@@ -1079,3 +1226,4 @@ def generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_
     except Exception as e:
         print(e)
         return None
+       

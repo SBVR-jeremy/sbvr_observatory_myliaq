@@ -31,6 +31,8 @@ from tools.utility import *
 from tools.streamlit_utility import *
 from tools.queries import *
 
+import re
+import json
 # ---------------------------------------------------------------------------------------------
 # Functions
 # ---------------------------------------------------------------------------------------------
@@ -42,6 +44,18 @@ from tools.queries import *
 import streamlit.components.v1 as components
 from jinja2 import Template
 import requests
+
+#---------------------------------------------------------------------------------------------
+# Capture screenhot for meteoblue
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+#from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options  
+
+from bs4 import BeautifulSoup
+
+import os
 
 
 st.set_page_config(layout="wide")
@@ -105,8 +119,7 @@ def showDebitsAnalyseGraphs(type_value, m_title, m_loading_title, expanded=False
 #----------------------------------------------------------------------------------
 #MAIN PROG
 try:
-    
-    
+
     #show chronique hydro graphs
     if True:
         

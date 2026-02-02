@@ -76,7 +76,35 @@ def getCommunications():
     json_data = json.dumps(response)
     return json_data
 
+@app.route('/api/qmna5', methods=['GET'])
+@cache.cached(timeout=300, make_cache_key=make_key)
+def qmna5Handler():
+    #print ("Graph ALERTE generation handler")
+    station_id = request.args.get("station_id",None)  
+    if station_id is None:
+        return "add ?station_id=XX to generate graph !"
+    else:
+        station_id = int(station_id)
+    
+    #print ("Graph generation for station_id "+str(station_id))
 
+    nb_days = 3
+    today = datetime.now(timezone.utc)
+    two_days_ago = today - timedelta(days=nb_days)
+    
+    #timestamp in milliseconds
+    ts_start = int(round(two_days_ago.timestamp()*1000.0)) 
+    ts_end = int(round(today.timestamp()*1000.0))
+
+    type_value_id = 4 #TODO: REPLACE CONSTANT
+
+    m_graph = m_getQMNA5_HYDROPORTAIL(station_id) #,type_value_id, ts_start,ts_end)
+
+    if m_graph is not None:
+        return m_graph.to_json()
+    else:
+        return """{"error":"Aucune donnée"}"""
+    
 @app.route("/api/statsChronique", methods=['GET'])
 @cache.cached(timeout=300, make_cache_key=make_key)
 def getStatsChroniques():
@@ -404,7 +432,7 @@ def graphDebitHandler():
     #print ("Graph generation for station_id "+str(station_id))
     #print(show_title)
     
-    nb_days = 30  #TODO: Handle this as variable .toml
+    nb_days = 90  #TODO: Handle this as variable .toml
     today = datetime.now(timezone.utc)
     two_days_ago = today - timedelta(days=nb_days)
     
@@ -420,7 +448,7 @@ def graphDebitHandler():
         ts_end = int(round(today.timestamp()*1000.0))
 
 
-    m_graph = generateChroniquePeriodeRetourGraph(station_id, type_value_id, ts_start, ts_end, showTitle=(show_title!="false"))
+    m_graph = generateChroniquePeriodeRetour2Graph(station_id, type_value_id, ts_start, ts_end, showTitle=(show_title!="false"))
     try:
         m_graph["usermeta"] = {
             "embedOptions": {

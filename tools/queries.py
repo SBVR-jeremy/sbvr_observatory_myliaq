@@ -32,6 +32,8 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy import create_engine
 import toml
 
+from bs4 import BeautifulSoup
+
 #Load secret file
 try:
     secrets = toml.load("./.streamlit/secrets.toml")
@@ -590,13 +592,152 @@ def m_getStatsChroniqueHydro(stations_id, type_value_id, start_date, end_date ):
     #print(stats_array)
     return stats_array.to_json()
 
+def m_getQMNA5_HYDROPORTAIL(station_id):
+    stationsFull = getStations()
+    my_station = m_extractStation(stationsFull,station_id)
+    
+    code_hydro = my_station['code']
+    code_hydro = code_hydro[0:len(code_hydro)-2]
+
+    #Get Q-J analysis
+    print("Station "+code_hydro)
+    url = 'https://hydro.eaufrance.fr/sitehydro/'+code_hydro+'/synthese/regime/toutes-eaux'  # Replace with your desired URL
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
+    }
+    print(url)
+    print('get hydroportail page for station')
+    page = requests.get(url, headers=headers)
+    print('parse page')
+    soup = BeautifulSoup(page.text, 'html.parser')
+    #st.text(soup)
+    # get the element with id="main-title"
+    #email_element = soup.find(attrs={'data-entity-code':"U401402001"})
+    print('select analysis results')
+    email_element = soup.select('div.statistics-result.position-relative')
+    
+    try: 
+        txt = email_element[0]['data-analysis']
+        #print('--------------')
+        #print(txt)
+        #print('--------------')
+        
+    except IndexError:
+        print('("Analyse inconnue sur hydroportail")')
+        quantile = pd.DataFrame([],
+                            columns=['T','p','q','u','IC.low','IC.high','quality','nom'])
+        return quantile
+        #raise Exception("Analyse inconnue sur hydroportail")
+    #st.text(txt)
+    #print(str(email_element[0]))
+    print('filter module')
+    m = re.search(r'"mean":([0-9]*),"continuity0"', txt)
+    #st.text(m.span())
+    module = float(m.group(1))/1000.0
+    print("Module = "+str(module)+" m3/s")
+    
+    #TODO : add module to df
+    # T = 1 ; p  = 1 ; q = module; u = N/A ; IC.Low = module - ecarttype ; IC.High = module + eccarttype; quality = N/A; nom="Module / Moyenne"
+    
+
+    #GET QMNA analysis
+    print("Station "+code_hydro)
+    url = 'https://hydro.eaufrance.fr/sitehydro/'+code_hydro+'/synthese/regime/basses-eaux'  # Replace with your desired URL
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
+    }
+    print(url)
+    print('get hydroportail page for station')
+    page = requests.get(url, headers=headers)
+    print('parse page')
+    soup = BeautifulSoup(page.text, 'html.parser')
+    #st.text(soup)
+    # get the element with id="main-title"
+    #email_element = soup.find(attrs={'data-entity-code':"U401402001"})
+    print('select analysis results')
+    email_element = soup.select('div.statistics-result.position-relative')
+    
+    try: 
+        txt = email_element[0]['data-result']
+        #print('--------------')
+        #print(txt)
+        #print('--------------')
+        
+    except IndexError:
+        print('("Analyse inconnue sur hydroportail")')
+        quantile = pd.DataFrame([],
+                            columns=['T','p','q','u','IC.low','IC.high','quality','nom'])
+        return quantile
+    
+    print('json quantiles')
+    data_json = json.loads(txt)
+    #st.text(data_json['result']['result']['quantile'])
+    #print(data_json['quantile'])
+    quantile = data_json['quantile']
+    quantile = quantile[1:len(quantile)-1]
+    #st.text(quantile)
+    #print(quantile)
+    print('convert to df')
+    df = pd.DataFrame(list(quantile))
+
+    print('filter module')
+    print('add module to df')
+    # T = 1 ; p  = 1 ; q = module; u = N/A ; IC.low = module - ecarttype ; IC.high = module + eccarttype; quality = N/A; nom="Module / Moyenne"
+    
+    df.loc[-1] = [1, 1, module* 1000.0, None, None, None,  None ]
+    df.index = df.index + 1 
+    df = df.sort_index()  # sorting by index
+
+    print('add names')
+    # add names
+    for quant in df.itertuples(index=True):
+        #print(quant)
+        #print(quant.p)
+        if quant.p == 0.5:
+            nom = "Biennale (médiane)"
+        elif quant.p == 0.2:
+            nom = "Quinquennale (sèche)"
+        elif quant.p == 0.1:
+            nom = "Décennale (sèche)"
+        elif quant.p == 0.05:
+            nom = "Vicennale (sèche)"
+        elif quant.p == 0.02:
+            nom = "Cinquantennale (sèche)"
+        elif quant.p == 0.8:
+            nom = "Quinquennale (humide)"
+        elif quant.p == 0.9:
+            nom = "Décennale (humide)"
+        elif quant.p == 0.95:
+            nom = "Vicennale (humide)"
+        elif quant.p == 0.98:
+            nom = "Cinquantennale (humide)"
+        elif quant.p == 1:
+            nom = "Module/Moyenne"
+        else:
+            nom = ""
+        df.at[quant.Index,'nom'] = nom
+
+    #print(df)
+    print('filtering and convertions')
+    df = df[df['nom']!=""] #filter named quantiles
+    df['q'] = round(df['q']/1000.0, 3) #return m3/S
+    df['IC.low'] = round(df['IC.low']/1000.0, 3) #return m3/S
+    df['IC.high'] = round(df['IC.high']/1000.0, 3) #return m3/S
+
+
+    #print(df)
+    qmna5 = df[df['T']==5]
+    #print(qmna5)
+    print("QMNA5 = "+str(qmna5['q'].values[0])+" m3/s")
+
+    return df
+
+
 def m_getQMNA5(station_id):
+    
+    # CALCUL LOCAL du QMNA5
     type_value_id = 5 #constant for DEBIT #TODO: Should be moved into conf !
     debits_moyen_journaliers = m_getAllSamplesAnalyse(station_id, type_value_id , start_date=-1, end_date=-1, grpFunc="AVERAGE",chartMode=True)
-    
-    #print(debits_moyen_journaliers.head(3))
-
-    #print(debits_moyen_journaliers.tail(3))
     
     if debits_moyen_journaliers.shape[0] == 0:
         return pd.DataFrame(columns = ['timestamp', 'numeric_value', 'status', 'qualification', 'initialPoint','unknown', 'station_id'])
@@ -605,15 +746,122 @@ def m_getQMNA5(station_id):
     return_period = 5
     freq_return = 1/return_period #0.2
 
-    #group by month
-    debits_moyen_mensuels = debits_moyen_journaliers.resample('1m', on="timestamp").agg( 
-            ymean=pd.NamedAgg(column="numeric_value", aggfunc="mean"),
-            ymin=pd.NamedAgg(column="numeric_value", aggfunc="min"),
-            ymax=pd.NamedAgg(column="numeric_value", aggfunc="max"),
-            ysum=pd.NamedAgg(column="numeric_value", aggfunc="sum"),
-            ycount=pd.NamedAgg(column="numeric_value", aggfunc="count"),
-        )
-    debits_moyen_mensuels['timestamp'] = debits_moyen_mensuels.index
-    debits_moyen_mensuels['numeric_value'] = debits_moyen_mensuels['ymean']
+    print("CALCUL DU QMNA5 LOCAL")
+    samples = debits_moyen_journaliers
+    quantile = pd.DataFrame([],
+                            columns=['T','p','q','u','IC.low','IC.high','quality','nom'])
+    
+    #2-5 5-10 10-20 20-50
+    #1-(2-5 5-10 10-20 20-50)
 
-    return debits_moyen_mensuels
+    # Calculer le percentile 98% (1/1.02)
+    QMNA1_02 = np.percentile(samples[['numeric_value']], 98)
+    print(QMNA1_02)
+    quantile.loc[-1] = [1.02, 98/100, QMNA1_02, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+
+    # Calculer le percentile 90% (1/1.11)
+    QMNA1_11 = np.percentile(samples[['numeric_value']], 90)
+    print(QMNA1_11)
+    quantile.loc[-1] = [1.11, 90/100, QMNA1_11, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    # Calculer le percentile 80% (1/1.25)
+    QMNA1_25 = np.percentile(samples[['numeric_value']], 80)
+    print(QMNA1_25)
+    quantile.loc[-1] = [1.25, 80/100, QMNA1_25, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+
+    # Calculer le percentile 50% (1/2)
+    QMNA2 = np.percentile(samples[['numeric_value']], 50)
+    print(QMNA2)
+    quantile.loc[-1] = [2, 50/100, QMNA2, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    # Calculer le percentile 20% (1/5)
+    QMNA5 = np.percentile(samples[['numeric_value']], 20)
+    print(QMNA5)
+    quantile.loc[-1] = [5, 20/100, QMNA5, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    # Calculer le percentile 10% (1/10)
+    QMNA10 = np.percentile(samples[['numeric_value']], 10)
+    print(QMNA10)
+    quantile.loc[-1] = [10, 10/100, QMNA10, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    # Calculer le percentile 2% (1/50)
+    QMNA50 = np.percentile(samples[['numeric_value']], 2)
+    print(QMNA50)
+    quantile.loc[-1] = [50, 2/100, QMNA50, None, None, None,  None,None]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    print('filter module')
+    m = float(samples[['numeric_value']].mean())
+    s  = float(samples[['numeric_value']].std())
+    print (m)
+
+    #TODO : add module to df
+    # T = 1 ; p  = 1 ; q = module; u = N/A ; IC.low = module - ecarttype ; IC.high = module + eccarttype; quality = N/A; nom="Module / Moyenne"
+    
+    quantile.loc[-1] = [1, 1, m, None, (m-s/2), (m+s/2),  None,"Module/Moyenne"  ]
+    quantile.index = quantile.index + 1 
+    quantile = quantile.sort_index()  # sorting by index
+
+    print(quantile)
+    print('convert to df')
+    df = quantile
+    print('add names')
+
+    # add names
+    for quant in df.itertuples(index=True):
+        print(quant)
+        print(quant.p)
+        if quant.p == 0.5:
+            nom = "Biennale (médiane)"
+        elif quant.p == 0.2:
+            nom = "Quinquennale (sèche)"
+        elif quant.p == 0.1:
+            nom = "Décennale (sèche)"
+        elif quant.p == 0.05:
+            nom = "Vicennale (sèche)"
+        elif quant.p == 0.02:
+            nom = "Cinquantennale (sèche)"
+        elif quant.p == 0.8:
+            nom = "Quinquennale (humide)"
+        elif quant.p == 0.9:
+            nom = "Décennale (humide)"
+        elif quant.p == 0.95:
+            nom = "Vicennale (humide)"
+        elif quant.p == 0.98:
+            nom = "Cinquantennale (humide)"
+        elif quant.p == 1:
+            nom = "Module/Moyenne"
+        else:
+            nom = ""
+        df.at[quant.Index,'nom'] = nom
+
+    print(df)
+    #print('filtering and convertions')
+    #df = df[df['nom']!=""] #filter named quantiles
+    #df['q'] = round(df['q']/1000.0, 2) #return m3/S
+    #df['IC.low'] = round(df['IC.low']/1000.0, 2) #return m3/S
+    #df['IC.high'] = round(df['IC.high']/1000.0, 2) #return m3/S
+
+
+    #print(df)
+    qmna5 = df[df['T']==5]
+    if not qmna5.empty:
+        #print(qmna5)
+        print("QMNA5 = "+str(qmna5['q'].values[0])+" m3/s")
+
+    return df
