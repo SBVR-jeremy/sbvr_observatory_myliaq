@@ -312,7 +312,7 @@ def generateChroniqueGraph(station_id, type_value_id, ts_start, ts_end, showTitl
 
             #print(range_)
             m_s = alt.Chart(seuils).mark_rule().encode(y=alt.Y('value', scale=alt.Scale(domain=m_domain)), color=alt.Color("name:N", title="", legend=None, scale=alt.Scale(domain=domain_, range=range_)))
-            m_t = alt.Chart(seuils).mark_text().encode(y='value', text='name:N')
+            m_t = alt.Chart(seuils).mark_text(dy=-5).encode(y='value', text='name:N')
             m_chart =  m_s + m_t + m_chart
             
         return m_chart
